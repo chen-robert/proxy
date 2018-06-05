@@ -18,5 +18,11 @@
   "bugs": {
     "url": "https://github.com/gamester543/proxy/issues"
   },
-  "homepage": "https://github.com/gamester543/proxy#readme"
+  "homepage": "https://github.com/gamester543/proxy#readme",
+  "dependencies": {
+    "compression": "^1.7.2",
+    "express": "^4.16.3",
+    "iconv-lite": "^0.4.23",
+    "request": "^2.87.0"
+  }
 }
