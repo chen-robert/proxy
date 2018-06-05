@@ -44,15 +44,18 @@ app.get("/*", (req, res) => {
       if(response.headers["content-type"].indexOf("text/html") > -1){
         const contentRegex = /(?<=charset=)[^\s]*/i
         
-        let htmlContent = iconv.decode(body, contentRegex.exec(response.headers["content-type"])[0]);
-        
-        const headRegex = /<head.*?/i;
-        const match = headRegex.exec(htmlContent);
-        
-        if(match.index > -1){
-          const injectedScript = `<script>${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>`;
-          const newHtml = htmlContent.substring(0, match.index) + injectedScript + htmlContent.substring(match.index);
-          return res.send(newHtml);
+        const regexMatches = contentRegex.exec(response.headers["content-type"]);
+        if(regexMatches !== null){
+          let htmlContent = iconv.decode(body, regexMatches[0]);
+          
+          const headRegex = /<head.*?/i;
+          const match = headRegex.exec(htmlContent);
+          
+          if(match.index > -1){
+            const injectedScript = `<script>${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>`;
+            const newHtml = htmlContent.substring(0, match.index) + injectedScript + htmlContent.substring(match.index);
+            return res.send(newHtml);
+          }
         }
       }
     }
