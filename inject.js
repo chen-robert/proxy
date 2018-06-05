@@ -1,25 +1,33 @@
 window.onload = function(){
-  const scriptList = Array.from(document.getElementsByTagName("script"));
-  
-  const hostNameRegex = /(?<=\/)http(s)?:\/\/.*?(?=\/)/i;
-  const hostName = (hostNameRegex.exec(window.location.href)[0]);
-  
-  const makeScript = function(src){
-    const script = document.createElement("script");
-    script.src = src;
+  function reloadElements(elemName){
+    const scriptList = Array.from(document.getElementsByTagName(elemName));
     
-    document.head.appendChild(script);
-  }
-  scriptList.forEach((script) => {
-    if(script.src !== ""){
-      //Load from external
-      if(script.src.indexOf(window.location.host) == -1){
-        makeScript("https://" + window.location.host + "/" + script.src);
-      //Load from relative path
-      }else{
-        makeScript("https://" + window.location.host + "/" + hostName + script.src.substring(script.src.indexOf(window.location.host) + window.location.host.length));
-        
-      }
+    const hostNameRegex = /(?<=\/)http(s)?:\/\/.*?(?=\/)/i;
+    const hostName = (hostNameRegex.exec(window.location.href)[0]);
+    
+    const makeScript = function(src){
+      const script = document.createElement(elemName);
+      script.src = src;
+      
+      document.head.appendChild(script);
+      
+      console.log(src);
     }
-  });
+    scriptList.forEach((script) => {
+      const url = script.src || script.href;
+      if(url !== undefined && url !== ""){
+        //Load from external
+        if(url.indexOf(window.location.host) == -1){
+          makeScript("https://" + window.location.host + "/" + url);
+        //Load from relative path
+        }else{
+          makeScript("https://" + window.location.host + "/" + hostName + url.substring(url.indexOf(window.location.host) + window.location.host.length));
+          
+        }
+      }
+    });
+  }
+  
+  reloadElements("script");
+  reloadElements("link");
 }
