@@ -7,7 +7,14 @@ window.onload = function(){
     
     const makeScript = function(src){
       const script = document.createElement(elemName);
-      script.src = src;
+      
+      if(elemName === "script"){
+        script.src = src;
+      }else if(elemName === "link"){
+        script.href = src;
+        script.rel = "stylesheet";
+      }
+      
       
       document.head.appendChild(script);
       
