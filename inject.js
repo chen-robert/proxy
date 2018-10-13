@@ -41,19 +41,25 @@ window.addEventListener("load", function(){
     scriptList.forEach((script) => {
       const url = script.src || script.href || script.action;
       if(url !== undefined && url !== ""){
-          const cleanedUrl = cleanUrl(url);
-          console.debug(`Loading ${cleanedUrl}`);
-          if(elemName === "img"){
-            //If starts with data url, don't proxy
-            if(url.indexOf("data:") === 0) return;
-            script.src = cleanedUrl;
-          }else if(elemName === "a"){
-            script.href = cleanedUrl;
-          }else if(elemName === "form"){
-            script.action = cleanedUrl;
-          }else{
-            makeScript(cleanedUrl);
-          }
+        const cleanedUrl = cleanUrl(url);
+        console.debug(`Loading ${cleanedUrl}`);
+        if(elemName === "img"){
+          //If starts with data url, don't proxy
+          if(url.indexOf("data:") === 0) return;
+          script.src = cleanedUrl;
+        }else if(elemName === "a"){
+          script.href = cleanedUrl;
+        }else if(elemName === "form"){
+          script.action = cleanedUrl;
+        }else{
+          makeScript(cleanedUrl);
+        }
+      }else{
+        if(elemName === "script"){
+          const newScriptTag = document.createElement('script');
+          newScriptTag.innerHTML = script.innerHTML;
+          document.head.appendChild(newScriptTag);          
+        }
       }
     });
   }
