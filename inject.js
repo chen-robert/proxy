@@ -4,21 +4,22 @@ if(searchStr.charAt(searchStr.length - 1) != "/")searchStr += "/";
 
 // Includes protocol (https://)
 const hostName = (hostNameRegex.exec(searchStr)[0]);
+const protocol = window.location.href.indexOf("http://") == -1? "https://": "http://";
 
 const cleanUrl = function(url){
   //Load from external
   if(url.indexOf(window.location.host) == -1){
-    if(url.indexOf("http") === -1){
+    if(url.indexOf("http://") === -1 && url.indexOf("https://") === -1){
       if(url[0] !== "/") url = "/" + url;
       url = hostName + url;
     }
-   return ("http://" + window.location.host + "/" + url);
+   return (protocol + window.location.host + "/" + url);
   }
   
   url = url.substring(window.location.origin.length);
   
   //Load from relative path
-  return ("http://" + window.location.host + "/" + hostName + url);
+  return (protocol + window.location.host + "/" + hostName + url);
 }
 
 window.addEventListener("load", function(){
