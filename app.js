@@ -80,30 +80,37 @@ app.get("/*", (req, res) => {
 }); 
 
 app.post("/*", (req, res) => {
-  const url = (req.originalUrl).substring("/".length);
-  
-  console.log(`POST ${url}`);
-  
-  const userAgent = req.headers["user-agent"];  
-  const contentType = req.headers['content-type'];
-  const headers = {
-    "Content-Type": contentType,
-    "User-Agent": userAgent
-  };
-  const options = {
-    method: "post",
-    body: req.body,
-    json: contentType.indexOf("json") !== -1,
-    url: url
-  }
-  request(options, (err, response, body) => {
-    if (err) {
-      res.send("Invalid url " + url);
-      return;
-    }
+  try{
+    const url = (req.originalUrl).substring("/".length);
     
-    res.send(body);
-  });
+    console.log(`POST ${url}`);
+    
+    const userAgent = req.headers["user-agent"];  
+    const contentType = req.headers['content-type'];
+    const headers = {
+      "Content-Type": contentType,
+      "User-Agent": userAgent
+    };
+    const options = {
+      method: "post",
+      body: req.body,
+      json: contentType.indexOf("json") !== -1,
+      url: url
+    }
+    request(options, (err, response, body) => {
+      if (err) {
+        res.send("Invalid url " + url);
+        return;
+      }
+      
+      res.send(body);
+    });
+  }catch(e){
+    res.status(500);
+    res.end();
+    
+    console.log(e.message);
+  }
 });
 
 //Universal redirect
