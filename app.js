@@ -46,7 +46,7 @@ app.get("/*", (req, res) => {
   }
   request({url, headers, encoding: null}, (error, response, body) => {
     if (error) {
-      res.send("Invalid url " + url);
+      res.send(`/*\nInvalid url ${url}\n*/`);
       return;
     }
     
@@ -70,7 +70,7 @@ app.get("/*", (req, res) => {
             index = match.index + match[0].length;
           }
           
-          const injectedScript = `\n<script>${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
+          const injectedScript = `\n<script id="proxy-injected-script">${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
           const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
           return res.send(newHtml);
         }

@@ -22,23 +22,29 @@ const cleanUrl = function(url){
   return (protocol + window.location.host + "/" + hostName + url);
 }
 
-window.addEventListener("load", function(){
+function reloadAllElements(){
   function reloadElements(elemName){
     const scriptList = Array.from(document.getElementsByTagName(elemName));
     
     
-    const makeScript = function(src){
+    const makeScript = function(src, link){
       const script = document.createElement(elemName);
+      script.dataset.used = "true";
       
       if(elemName === "script"){
         script.src = src;
       }else if(elemName === "link"){
         script.href = src;
-        script.rel = "stylesheet";
+        script.rel = link.rel;
+        if(link.getAttribute("as")) script.as = link.getAttribute("as");        
       }
       document.head.appendChild(script);
     }
     scriptList.forEach((script) => {
+      if(script.id === "proxy-injected-script") return;
+      if(script.dataset.used === "true") return;
+      script.dataset.used = "true";
+      
       const url = script.src || script.href || script.action;
       if(url !== undefined && url !== ""){
         const cleanedUrl = cleanUrl(url);
@@ -52,11 +58,12 @@ window.addEventListener("load", function(){
         }else if(elemName === "form"){
           script.action = cleanedUrl;
         }else{
-          makeScript(cleanedUrl);
+          makeScript(cleanedUrl, script);
         }
       }else{
         if(elemName === "script"){
           const newScriptTag = document.createElement('script');
+          newScriptTag.dataset.used = "true";
           newScriptTag.innerHTML = script.innerHTML;
           document.head.appendChild(newScriptTag);          
         }
@@ -69,9 +76,9 @@ window.addEventListener("load", function(){
   reloadElements("link");
   reloadElements("a");
   reloadElements("form");
-  
-  console.log("Finished proxying");
-});
+}
+window.addEventListener("load", () => reloadAllElements() || console.log("Finished proxying") || setInterval(reloadAllElements, 1000));
+
 
 XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
