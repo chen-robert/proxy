@@ -77,8 +77,7 @@ function reloadAllElements(){
   reloadElements("a");
   reloadElements("form");
 }
-window.addEventListener("load", () => reloadAllElements() || console.log("Finished proxying") || setInterval(reloadAllElements, 1000));
-
+window.addEventListener("load", () => reloadAllElements() || console.log("Finished proxying") || setInterval(reloadAllElements, 10000));
 
 XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 

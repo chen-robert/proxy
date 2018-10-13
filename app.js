@@ -54,26 +54,25 @@ app.get("/*", (req, res) => {
       res.setHeader("Content-Type", response.headers['content-type']);
       
       if(response.headers["content-type"].indexOf("text/html") > -1){
-        const contentRegex = /(?<=charset=)[^\s]*/i
+      const contentRegex = /(?<=charset=)[^\s]*/i
+      
+      let regexMatches = contentRegex.exec(response.headers["content-type"]);
+      if(regexMatches == null) regexMatches = ["utf-8"];
+      
+        let htmlContent = iconv.decode(body, regexMatches[0]);
         
-        const regexMatches = contentRegex.exec(response.headers["content-type"]);
-        if(regexMatches !== null){
-          let htmlContent = iconv.decode(body, regexMatches[0]);
-          
-          const headRegex = /<head.*?>/i;
-          const match = headRegex.exec(htmlContent);
-          
-          let index;
-          if(match === null){
-            index = 0;
-          } else{
-            index = match.index + match[0].length;
-          }
-          
-          const injectedScript = `\n<script id="proxy-injected-script">${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
-          const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
-          return res.send(newHtml);
+        const headRegex = /<head.*?>/i;
+        const match = headRegex.exec(htmlContent);
+        
+        let index;
+        if(match === null){
+          index = 0;
+        } else{
+          index = match.index + match[0].length;
         }
+        const injectedScript = `\n<script id="proxy-injected-script">${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
+        const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
+        return res.send(newHtml);
       }
     }
     res.send(new Buffer(body));
