@@ -11,6 +11,7 @@ const fs = require("fs");
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.text());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 const http = require('http').Server(app);
 
@@ -30,94 +31,81 @@ app.get("/", (req, res) => {
 });
 
 app.get("/*", (req, res) => {
-  try{
-    let url = (req.originalUrl).substring("/".length);
-    
-    // Hack for stuff like http://localhost:3000/https:/reddit.com/map
-    if(url.indexOf("//") === -1){
-      url = url.replace("/", "//");
+  let url = (req.originalUrl).substring("/".length);
+  
+  // Hack for stuff like http://localhost:3000/https:/reddit.com/map
+  if(url.indexOf("//") === -1){
+    url = url.replace("/", "//");
+  }
+  
+  console.log(`GET ${url}`)
+  
+  const userAgent = req.headers["user-agent"];
+  const headers = {
+    "User-Agent": userAgent
+  }
+  request({url, headers, encoding: null}, (error, response, body) => {
+    if (error) {
+      res.send("Invalid url " + url);
+      return;
     }
     
-    console.log(`GET ${url}`)
-    
-    const userAgent = req.headers["user-agent"];
-    const headers = {
-      "User-Agent": userAgent
-    }
-    request({url, headers, encoding: null}, (error, response, body) => {
-      if (error) {
-        res.send("Invalid url " + url);
-        return;
-      }
+    if (response.headers['content-type'] !== undefined) {
+      res.setHeader("Content-Type", response.headers['content-type']);
       
-      if (response.headers['content-type'] !== undefined) {
-        res.setHeader("Content-Type", response.headers['content-type']);
+      if(response.headers["content-type"].indexOf("text/html") > -1){
+        const contentRegex = /(?<=charset=)[^\s]*/i
         
-        if(response.headers["content-type"].indexOf("text/html") > -1){
-          const contentRegex = /(?<=charset=)[^\s]*/i
+        const regexMatches = contentRegex.exec(response.headers["content-type"]);
+        if(regexMatches !== null){
+          let htmlContent = iconv.decode(body, regexMatches[0]);
           
-          const regexMatches = contentRegex.exec(response.headers["content-type"]);
-          if(regexMatches !== null){
-            let htmlContent = iconv.decode(body, regexMatches[0]);
-            
-            const headRegex = /<head.*?>/i;
-            const match = headRegex.exec(htmlContent);
-            
-            let index;
-            if(match === null){
-              index = 0;
-            } else{
-              index = match.index + match[0].length;
-            }
-            
-            const injectedScript = `\n<script>${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
-            const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
-            return res.send(newHtml);
+          const headRegex = /<head.*?>/i;
+          const match = headRegex.exec(htmlContent);
+          
+          let index;
+          if(match === null){
+            index = 0;
+          } else{
+            index = match.index + match[0].length;
           }
+          
+          const injectedScript = `\n<script>${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
+          const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
+          return res.send(newHtml);
         }
       }
-      res.send(new Buffer(body));
-    });
-  }catch(e){
-    res.status(500);
-    res.end();
-    
-    console.log(e.message);
-  }
+    }
+    res.send(new Buffer(body));
+  });
 }); 
 
 app.post("/*", (req, res) => {
-  try{
-    const url = (req.originalUrl).substring("/".length);
-    
-    console.log(`POST ${url}`);
-    
-    const userAgent = req.headers["user-agent"];  
-    const contentType = req.headers['content-type'];
-    const headers = {
-      "Content-Type": contentType,
-      "User-Agent": userAgent
-    };
-    const options = {
-      method: "post",
-      body: req.body,
-      json: contentType.indexOf("json") !== -1,
-      url: url
-    }
-    request(options, (err, response, body) => {
-      if (err) {
-        res.send("Invalid url " + url);
-        return;
-      }
-      
-      res.send(body);
-    });
-  }catch(e){
-    res.status(500);
-    res.end();
-    
-    console.log(e.message);
+  const url = (req.originalUrl).substring("/".length);
+  
+  console.log(`POST ${url}`);
+  
+  const userAgent = req.headers["user-agent"];  
+  const contentType = req.headers['content-type'];
+  const headers = {
+    "Content-Type": contentType,
+    "User-Agent": userAgent
+  };
+  const options = {
+    method: "post",
+    body: JSON.stringify(req.body),
+    json: contentType.indexOf("json") !== -1,
+    url: url
   }
+  request(options, (err, response, body) => {
+    if (err) {
+      res.send("Invalid url " + url);
+      return;
+    }
+    
+    console.log(typeof body);
+    res.send(body);
+  });
 });
 
 //Universal redirect
