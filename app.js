@@ -30,53 +30,60 @@ app.get("/", (req, res) => {
 });
 
 app.get("/*", (req, res) => {
-  let url = (req.originalUrl).substring("/".length);
-  
-  // Hack for stuff like http://localhost:3000/https:/reddit.com/map
-  if(url.indexOf("//") === -1){
-    url = url.replace("/", "//");
-  }
-  
-  console.log(`GET ${url}`)
-  
-  const userAgent = req.headers["user-agent"];
-  const headers = {
-    "User-Agent": userAgent
-  }
-  request({url, headers, encoding: null}, (error, response, body) => {
-    if (error) {
-      res.send("Invalid url " + url);
-      return;
+  try{
+    let url = (req.originalUrl).substring("/".length);
+    
+    // Hack for stuff like http://localhost:3000/https:/reddit.com/map
+    if(url.indexOf("//") === -1){
+      url = url.replace("/", "//");
     }
     
-    if (response.headers['content-type'] !== undefined) {
-      res.setHeader("Content-Type", response.headers['content-type']);
+    console.log(`GET ${url}`)
+    
+    const userAgent = req.headers["user-agent"];
+    const headers = {
+      "User-Agent": userAgent
+    }
+    request({url, headers, encoding: null}, (error, response, body) => {
+      if (error) {
+        res.send("Invalid url " + url);
+        return;
+      }
       
-      if(response.headers["content-type"].indexOf("text/html") > -1){
-        const contentRegex = /(?<=charset=)[^\s]*/i
+      if (response.headers['content-type'] !== undefined) {
+        res.setHeader("Content-Type", response.headers['content-type']);
         
-        const regexMatches = contentRegex.exec(response.headers["content-type"]);
-        if(regexMatches !== null){
-          let htmlContent = iconv.decode(body, regexMatches[0]);
+        if(response.headers["content-type"].indexOf("text/html") > -1){
+          const contentRegex = /(?<=charset=)[^\s]*/i
           
-          const headRegex = /<head.*?>/i;
-          const match = headRegex.exec(htmlContent);
-          
-          let index;
-          if(match === null){
-            index = 0;
-          } else{
-            index = match.index + match[0].length;
+          const regexMatches = contentRegex.exec(response.headers["content-type"]);
+          if(regexMatches !== null){
+            let htmlContent = iconv.decode(body, regexMatches[0]);
+            
+            const headRegex = /<head.*?>/i;
+            const match = headRegex.exec(htmlContent);
+            
+            let index;
+            if(match === null){
+              index = 0;
+            } else{
+              index = match.index + match[0].length;
+            }
+            
+            const injectedScript = `\n<script>${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
+            const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
+            return res.send(newHtml);
           }
-          
-          const injectedScript = `\n<script>${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
-          const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
-          return res.send(newHtml);
         }
       }
-    }
-    res.send(new Buffer(body));
-  });
+      res.send(new Buffer(body));
+    });
+  }catch(e){
+    res.status(500);
+    res.end();
+    
+    console.log(e.message);
+  }
 }); 
 
 app.post("/*", (req, res) => {
