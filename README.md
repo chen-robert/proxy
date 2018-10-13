@@ -3,7 +3,7 @@
 #### Description
 The application redirects all requests of the form `/https://a.website.com/resource` to its corresponding resource. For example, querying `/https://www.google.com` would return the google home page. In addition to this, it inserts `inject.js` into all resources with content type `text/html`. 
 
-`inject.js` is a heuristical framework that attempts to redirect all resources to the proxy. For example, 
+`inject.js` is a script that attempts to redirect all resources to the proxy. For example, 
 ```
 <img src="cats.png"></img>
 ```
