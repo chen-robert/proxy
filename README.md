@@ -13,4 +13,4 @@ should be transformed to
 ```
 *(assuming the host is `website.com`)*
 #### Instance
-A running instance can be found [here](http://ihs-proxy.herokuapp.com/)
+A running instance can be found [here](http://proxyjs.herokuapp.com)
