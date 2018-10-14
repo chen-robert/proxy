@@ -49,6 +49,9 @@ app.get("/*", (req, res) => {
       res.send(`/*\nInvalid url ${url}\n*/`);
       return;
     }
+    if(response.request.uri.href !== url){
+      return res.redirect("/" + response.request.uri.href);
+    }
     
     if (response.headers['content-type'] !== undefined) {
       res.setHeader("Content-Type", response.headers['content-type']);
