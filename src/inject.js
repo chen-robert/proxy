@@ -2,19 +2,24 @@ if (!window.injectedScriptRunOnce) {
   window.injectedScriptRunOnce = ":)";
   (function() {
     const href = window.location.href;
-    const origin = href.substring(0, href.indexOf("/", href.indexOf("://") + 3));
-    const pathname = href.substring(origin.length, href.includes("?") ? href.indexOf("?"): href.length);
+    const origin = href.substring(
+      0,
+      href.indexOf("/", href.indexOf("://") + 3)
+    );
+    const pathname = href.substring(
+      origin.length,
+      href.includes("?") ? href.indexOf("?") : href.length
+    );
     const host = origin.substring(origin.indexOf("://") + 3);
-    
+
     const hostNameRegex = /(?<=\/)http(s)?:\/\/.*?(?=\/)/i;
-    
+
     let searchStr = href;
     if (searchStr.charAt(searchStr.length - 1) != "/") searchStr += "/";
 
     // Includes protocol (https://)
     const hostName = hostNameRegex.exec(searchStr)[0];
-    const protocol =
-      href.startsWith("http://") ? "http://" : "https://";
+    const protocol = href.startsWith("http://") ? "http://" : "https://";
 
     const cleanUrl = function(url) {
       const originalUrl = url;
@@ -140,8 +145,9 @@ if (!window.injectedScriptRunOnce) {
     window.addEventListener("load", () => {
       reloadAllElements();
       console.log("Finished proxying");
-      if(document.getElementById("injected-loading-screen")){
-        document.getElementById("injected-loading-screen").style.display = "none";
+      if (document.getElementById("injected-loading-screen")) {
+        document.getElementById("injected-loading-screen").style.display =
+          "none";
         document.body.style.overflow = "";
       }
       setInterval(reloadAllElements, 1000);

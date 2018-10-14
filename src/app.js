@@ -9,6 +9,7 @@ const fixHTML = require(__dirname + "/fix.js");
 const fs = require("fs");
 
 const app = express();
+app.enable("trust proxy");
 const concat = require("concat-stream");
 app.use(function(req, res, next) {
   req.pipe(
@@ -58,7 +59,7 @@ const processHTML = (req, response, body) => {
     __dirname + "/inject.js",
     "utf8"
   )}</script>\n`;
-/*        const injectedHeader = `\n${fs.readFileSync(
+  /*        const injectedHeader = `\n${fs.readFileSync(
     __dirname + "/loading.html",
     "utf8"
   )}\n`;
@@ -71,8 +72,11 @@ const processHTML = (req, response, body) => {
     htmlContent.substring(headIndex, bodyIndex) +
     injectedHeader +
     htmlContent.substring(bodyIndex);
-  return fixHTML(newHtml, req.protocol + "://" + req.get("host") + req.originalUrl);
-}
+  return fixHTML(
+    newHtml,
+    req.protocol + "://" + req.get("host") + req.originalUrl
+  );
+};
 app.get("/*", (req, res) => {
   let url = req.originalUrl.substring("/".length);
 
@@ -137,7 +141,7 @@ app.post("/*", (req, res) => {
       res.send("Invalid url " + url);
       return;
     }
-    
+
     if (response.headers["content-encoding"])
       res.setHeader("Content-Encoding", response.headers["content-encoding"]);
 

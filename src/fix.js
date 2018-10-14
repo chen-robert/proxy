@@ -2,22 +2,24 @@ const cheerio = require("cheerio");
 
 const fixHTML = (html, url) => {
   const $ = cheerio.load(html);
-  
+
   const href = url;
   const origin = href.substring(0, href.indexOf("/", href.indexOf("://") + 3));
-  let pathname = href.substring(origin.length, href.includes("?") ? href.indexOf("?"): href.length);
-  if(!pathname.endsWith("/")) pathname += "/";
+  let pathname = href.substring(
+    origin.length,
+    href.includes("?") ? href.indexOf("?") : href.length
+  );
+  if (!pathname.endsWith("/")) pathname += "/";
   const host = origin.substring(origin.indexOf("://") + 3);
-  
+
   const hostNameRegex = /(?<=\/)http(s)?:\/\/.*?(?=\/)/i;
-  
+
   let searchStr = href;
   if (searchStr.charAt(searchStr.length - 1) != "/") searchStr += "/";
 
   // Includes protocol (https://)
   const hostName = hostNameRegex.exec(searchStr)[0];
-  const protocol =
-    href.startsWith("http://") ? "http://" : "https://";
+  const protocol = href.startsWith("http://") ? "http://" : "https://";
 
   const cleanUrl = function(url) {
     const originalUrl = url;
@@ -61,17 +63,25 @@ const fixHTML = (html, url) => {
   function reloadAllElements() {
     function reloadElements(elemName) {
       const scriptList = $(elemName);
-      
+
       const remakeElem = $elem => {
-        const cleanProp = (prop) => {
-          if($elem.attr(prop)){
+        const cleanProp = prop => {
+          if ($elem.attr(prop)) {
             const propArr = $elem.attr(prop).split(" ");
             // Hack
-            $elem.attr(prop, propArr
-              .map(part => (part.includes(".") || part.includes("/")? cleanUrl(part) : part))
-              .join(" "));            
+            $elem.attr(
+              prop,
+              propArr
+                .map(
+                  part =>
+                    part.includes(".") || part.includes("/")
+                      ? cleanUrl(part)
+                      : part
+                )
+                .join(" ")
+            );
           }
-        }
+        };
         const cleanedProps = [
           "src",
           "srcset",
@@ -85,7 +95,7 @@ const fixHTML = (html, url) => {
       scriptList.each((i, script) => {
         const $script = $(script);
         $script.attr("data-used", "true");
-        
+
         remakeElem($script);
       });
     }
@@ -102,6 +112,6 @@ const fixHTML = (html, url) => {
   }
   reloadAllElements();
   return $.html();
-}
+};
 
 module.exports = fixHTML;
