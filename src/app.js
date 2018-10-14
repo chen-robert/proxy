@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("It's a proxy!");
+  res.sendFile(__dirname + "/index.html");
 });
 
 app.get("/*", (req, res) => {

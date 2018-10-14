@@ -1,0 +1,41 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ProxyJS</title>
+    <meta name="description" content="A proxy built by dynamically injecting javascript into content.">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="author" content="Robert Chen">
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        text-align: center;
+        
+        background-color: #eee;
+      }
+      body, html{
+        height: 100%;
+        width: 100%;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="margin-top: 25vh">
+      <h3>ProxyJS</h3>
+      <i>Dynamic proxying with JS</i>
+      <div>
+        <input id="search-box" style="border: none; width: 250px; height: 20px; margin: 20px; padding: 5px;" placeholder="Website"></input>
+      </div>
+    </div>
+    <script>
+      window.onload = () => document.getElementById("search-box").onkeypress = (e) => {
+        if(e.keyCode === 13){
+          window.location = ("/" + e.target.value);
+        }
+      }
+    </script>
+  </body>
+</html>
