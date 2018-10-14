@@ -27,6 +27,9 @@ const injectedScriptRunOnce = ":)";
       return protocol + window.location.host + dir + "/" + url;
     }
     
+    // Urls of form `https://website.com/data.js`
+    if(url.startsWith("http://") || url.startsWith("https://")) return protocol + window.location.host + "/" + url;
+    
     //Load from external
     if(!url.includes(window.location.host)){
       if(url.indexOf("http://") === -1 && url.indexOf("https://") === -1){
