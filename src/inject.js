@@ -13,10 +13,10 @@ const injectedScriptRunOnce = ":)";
     const originalUrl = url;
     
     // If data url, don't proxy
-    if(url.indexOf("data:") === 0) return url;
+    if(url.startsWith("data:")) return url;
     
     // Urls of form `//website.com/resource`
-    if(url.indexOf("//") === 0){
+    if(url.startsWith("//")){
       return (protocol + window.location.host + "/" + (hostName.includes("https")? "https://": "http://") + url.substring(2));
     }
     // Urls of form `index.js` (note NOT `/index.js`)
@@ -27,25 +27,18 @@ const injectedScriptRunOnce = ":)";
       return protocol + window.location.host + dir + "/" + url;
     }
     
-    // Urls of form `https://website.com/data.js`
-    if(url.startsWith("http://") || url.startsWith("https://")) return protocol + window.location.host + "/" + url;
-    
-    //Load from external
-    if(!url.includes(window.location.host)){
-      if(url.indexOf("http://") === -1 && url.indexOf("https://") === -1){
-        if(url[0] !== "/") url = "/" + url;
-        url = hostName + url;
-      }
-      url = url.replace("http://", "https://");
-     return (protocol + window.location.host + "/" + url);
+    if(url.startsWith(window.location.origin)){
+      url = url.substring(window.location.origin.length);
+      if(url.charAt(0) === "/")url = url.substring(1);
     }
     
-    url = url.substring(window.location.origin.length);
-    if(url.charAt(0) === "/")url = url.substring(1);
     
-    // Urls of form `https://proxy.com/https://website.com/data.js`
-    if(url.indexOf("http://") === 0 || url.indexOf("https://") === 0) return originalUrl;
-    
+    // Urls of form `https://website.com/data.js`
+    if(url.startsWith("http://") || url.startsWith("https://")) return protocol + window.location.host + "/" + url;
+    // Urls of form `/index.js`
+    if(url.charAt(0) === "/"){
+      return (protocol + window.location.host + "/" + hostName + url);
+    }
     //Load from relative path
     return (protocol + window.location.host + "/" + hostName + "/" + url);
   }
