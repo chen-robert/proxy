@@ -38,6 +38,10 @@ app.get("/*", (req, res) => {
     url = url.replace("/", "//");
   }
   
+  if(!url.startsWith("https://") && !url.startsWith("http://")){
+    url = "https://" + url;
+  }
+  
   console.log(`GET ${url}`)
   
   const userAgent = req.headers["user-agent"];
