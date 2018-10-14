@@ -14,7 +14,7 @@ if (!window.injectedScriptRunOnce) {
     // Includes protocol (https://)
     const hostName = hostNameRegex.exec(searchStr)[0];
     const protocol =
-      href.indexOf("http://") == -1 ? "https://" : "http://";
+      href.startsWith("http://") ? "http://" : "https://";
 
     const cleanUrl = function(url) {
       const originalUrl = url;
@@ -140,8 +140,10 @@ if (!window.injectedScriptRunOnce) {
     window.addEventListener("load", () => {
       reloadAllElements();
       console.log("Finished proxying");
-      document.getElementById("injected-loading-screen").style.display = "none";
-      document.body.style.overflow = "";
+      if(document.getElementById("injected-loading-screen")){
+        document.getElementById("injected-loading-screen").style.display = "none";
+        document.body.style.overflow = "";
+      }
       setInterval(reloadAllElements, 1000);
     });
 
