@@ -1,0 +1,43 @@
+<div id="injected-loading-screen">
+  <div id="injected-loading-bar"></div>
+</div>
+<style>
+  #injected-loading-screen{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #eee;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  #injected-loading-bar {
+    height: 4px;
+    width: 50%;
+    position: relative;
+    overflow: hidden;
+    background-color: #ddd;
+  }
+  #injected-loading-bar:before{
+    display: block;
+    position: absolute;
+    content: "";
+    left: -200px;
+    width: 50%;
+    height: 4px;
+    background-color: #aaa;
+    animation: loading 2s linear infinite;
+  }
+
+  @keyframes loading {
+    from {left: -50%;}
+    to {left: 100%;}
+  }
+</style>
+<script>
+  document.body.style.overflow = "hidden";
+</script>

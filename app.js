@@ -71,16 +71,15 @@ app.get("/*", (req, res) => {
         let htmlContent = iconv.decode(body, regexMatches[0]);
         
         const headRegex = /<head.*?>/i;
-        const match = headRegex.exec(htmlContent);
+        const bodyRegex = /<body.*?>/i;
+        const headMatch = headRegex.exec(htmlContent);
+        const bodyMatch = bodyRegex.exec(htmlContent);
         
-        let index;
-        if(match === null){
-          index = 0;
-        } else{
-          index = match.index + match[0].length;
-        }
+        const headIndex = headMatch? headMatch.index + headMatch[0].length: 0;
+        const bodyIndex = bodyMatch? bodyMatch.index + bodyMatch[0].length: 0;
         const injectedScript = `\n<script data-used="true">${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
-        const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
+        const injectedHeader = `\n${fs.readFileSync(__dirname + "/loading.html", "utf8")}\n`;
+        const newHtml = htmlContent.substring(0, headIndex) + injectedScript + htmlContent.substring(headIndex, bodyIndex) + injectedHeader + htmlContent.substring(bodyIndex);
         return res.send(newHtml);
       }
     }
