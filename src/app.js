@@ -4,14 +4,17 @@ const compression = require("compression");
 const iconv = require("iconv-lite");
 const express = require('express');
 const request = require("request").defaults({jar: true});
-const bodyParser = require('body-parser');
 
 const fs = require("fs");
 
 const app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.text());
-app.use(bodyParser.urlencoded({ extended: false }));
+const concat = require('concat-stream');
+app.use(function(req, res, next){
+  req.pipe(concat(function(data){
+    req.body = data;
+    next();
+  }));
+});
 app.use(compression());
 const http = require('http').Server(app);
 
@@ -39,7 +42,8 @@ app.get("/*", (req, res) => {
   }
   
   if(!url.startsWith("https://") && !url.startsWith("http://")){
-    url = "https://" + url;
+    url = "/https://" + url;
+    return res.redirect(url);
   }
   
   console.log(`GET ${url}`)
@@ -79,6 +83,7 @@ app.get("/*", (req, res) => {
         const bodyIndex = bodyMatch? bodyMatch.index + bodyMatch[0].length: 0;
         const injectedScript = `\n<script data-used="true">${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
         const injectedHeader = `\n${fs.readFileSync(__dirname + "/loading.html", "utf8")}\n`;
+        
         const newHtml = htmlContent.substring(0, headIndex) + injectedScript + htmlContent.substring(headIndex, bodyIndex) + injectedHeader + htmlContent.substring(bodyIndex);
         return res.send(newHtml);
       }
@@ -100,8 +105,8 @@ app.post("/*", (req, res) => {
   };
   const options = {
     method: "post",
-    body: JSON.stringify(req.body),
-    json: contentType.indexOf("json") !== -1,
+    body: req.body,
+    headers,
     url: url
   }
   request(options, (err, response, body) => {
@@ -110,7 +115,6 @@ app.post("/*", (req, res) => {
       return;
     }
     
-    console.log(typeof body);
     res.send(body);
   });
 });
