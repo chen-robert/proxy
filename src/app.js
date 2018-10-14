@@ -4,6 +4,7 @@ const compression = require("compression");
 const iconv = require("iconv-lite");
 const express = require("express");
 const request = require("request").defaults({ jar: true });
+const fixHTML = require(__dirname + "/fix.js");
 
 const fs = require("fs");
 
@@ -38,6 +39,40 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
+const processHTML = (req, response, body) => {
+  const contentRegex = /(?<=charset=)[^\s]*/i;
+
+  let regexMatches = contentRegex.exec(response.headers["content-type"]);
+  if (regexMatches == null) regexMatches = ["utf-8"];
+
+  let htmlContent = iconv.decode(body, regexMatches[0]);
+
+  const headRegex = /<head.*?>/i;
+  const bodyRegex = /<body.*?>/i;
+  const headMatch = headRegex.exec(htmlContent);
+  const bodyMatch = bodyRegex.exec(htmlContent);
+
+  const headIndex = headMatch ? headMatch.index + headMatch[0].length : 0;
+  const bodyIndex = bodyMatch ? bodyMatch.index + bodyMatch[0].length : 0;
+  const injectedScript = `\n<script data-used="true">${fs.readFileSync(
+    __dirname + "/inject.js",
+    "utf8"
+  )}</script>\n`;
+/*        const injectedHeader = `\n${fs.readFileSync(
+    __dirname + "/loading.html",
+    "utf8"
+  )}\n`;
+  */
+  const injectedHeader = "";
+
+  const newHtml =
+    htmlContent.substring(0, headIndex) +
+    injectedScript +
+    htmlContent.substring(headIndex, bodyIndex) +
+    injectedHeader +
+    htmlContent.substring(bodyIndex);
+  return fixHTML(newHtml, req.protocol + "://" + req.get("host") + req.originalUrl);
+}
 app.get("/*", (req, res) => {
   let url = req.originalUrl.substring("/".length);
 
@@ -73,36 +108,7 @@ app.get("/*", (req, res) => {
       res.setHeader("Content-Type", response.headers["content-type"]);
 
       if (response.headers["content-type"].indexOf("text/html") > -1) {
-        const contentRegex = /(?<=charset=)[^\s]*/i;
-
-        let regexMatches = contentRegex.exec(response.headers["content-type"]);
-        if (regexMatches == null) regexMatches = ["utf-8"];
-
-        let htmlContent = iconv.decode(body, regexMatches[0]);
-
-        const headRegex = /<head.*?>/i;
-        const bodyRegex = /<body.*?>/i;
-        const headMatch = headRegex.exec(htmlContent);
-        const bodyMatch = bodyRegex.exec(htmlContent);
-
-        const headIndex = headMatch ? headMatch.index + headMatch[0].length : 0;
-        const bodyIndex = bodyMatch ? bodyMatch.index + bodyMatch[0].length : 0;
-        const injectedScript = `\n<script data-used="true">${fs.readFileSync(
-          __dirname + "/inject.js",
-          "utf8"
-        )}</script>\n`;
-        const injectedHeader = `\n${fs.readFileSync(
-          __dirname + "/loading.html",
-          "utf8"
-        )}\n`;
-
-        const newHtml =
-          htmlContent.substring(0, headIndex) +
-          injectedScript +
-          htmlContent.substring(headIndex, bodyIndex) +
-          injectedHeader +
-          htmlContent.substring(bodyIndex);
-        return res.send(newHtml);
+        return res.send(processHTML(req, response, body));
       }
     }
     res.send(new Buffer(body));
@@ -131,7 +137,17 @@ app.post("/*", (req, res) => {
       res.send("Invalid url " + url);
       return;
     }
+    
+    if (response.headers["content-encoding"])
+      res.setHeader("Content-Encoding", response.headers["content-encoding"]);
 
+    if (response.headers["content-type"] !== undefined) {
+      res.setHeader("Content-Type", response.headers["content-type"]);
+
+      if (response.headers["content-type"].indexOf("text/html") > -1) {
+        return res.send(processHTML(req, response, body));
+      }
+    }
     res.send(body);
   });
 });

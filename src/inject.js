@@ -1,14 +1,20 @@
 if (!window.injectedScriptRunOnce) {
   window.injectedScriptRunOnce = ":)";
   (function() {
+    const href = window.location.href;
+    const origin = href.substring(0, href.indexOf("/", href.indexOf("://") + 3));
+    const pathname = href.substring(origin.length, href.includes("?") ? href.indexOf("?"): href.length);
+    const host = origin.substring(origin.indexOf("://") + 3);
+    
     const hostNameRegex = /(?<=\/)http(s)?:\/\/.*?(?=\/)/i;
-    let searchStr = window.location.href;
+    
+    let searchStr = href;
     if (searchStr.charAt(searchStr.length - 1) != "/") searchStr += "/";
 
     // Includes protocol (https://)
     const hostName = hostNameRegex.exec(searchStr)[0];
     const protocol =
-      window.location.href.indexOf("http://") == -1 ? "https://" : "http://";
+      href.indexOf("http://") == -1 ? "https://" : "http://";
 
     const cleanUrl = function(url) {
       const originalUrl = url;
@@ -20,7 +26,7 @@ if (!window.injectedScriptRunOnce) {
       if (url.startsWith("//")) {
         return (
           protocol +
-          window.location.host +
+          host +
           "/" +
           (hostName.includes("https") ? "https://" : "http://") +
           url.substring(2)
@@ -28,26 +34,26 @@ if (!window.injectedScriptRunOnce) {
       }
       // Urls of form `index.js` (note NOT `/index.js`)
       if (!url.includes("/")) {
-        const loc = window.location.pathname;
+        const loc = pathname;
         const dir = loc.substring(0, loc.lastIndexOf("/"));
 
-        return protocol + window.location.host + dir + "/" + url;
+        return protocol + host + dir + "/" + url;
       }
 
-      if (url.startsWith(window.location.origin)) {
-        url = url.substring(window.location.origin.length);
+      if (url.startsWith(origin)) {
+        url = url.substring(origin.length);
         if (url.charAt(0) === "/") url = url.substring(1);
       }
 
       // Urls of form `https://website.com/data.js`
       if (url.startsWith("http://") || url.startsWith("https://"))
-        return protocol + window.location.host + "/" + url;
+        return protocol + host + "/" + url;
       // Urls of form `/index.js`
       if (url.charAt(0) === "/") {
-        return protocol + window.location.host + "/" + hostName + url;
+        return protocol + host + "/" + hostName + url;
       }
       //Load from relative path
-      return protocol + window.location.host + "/" + hostName + "/" + url;
+      return protocol + host + "/" + hostName + "/" + url;
     };
     function reloadAllElements() {
       //List of elements to remake
@@ -142,7 +148,6 @@ if (!window.injectedScriptRunOnce) {
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
     var myOpen = function(method, url, async = true, user, password) {
-      console.log(url, cleanUrl(url));
       //call original
       this.realOpen(method, cleanUrl(url), async, user, password);
     };
