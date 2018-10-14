@@ -48,7 +48,7 @@ const injectedScriptRunOnce = ":)";
   }
   function reloadAllElements(){
     //List of elements to remake
-    const remakeList = ["img", "a", "form", "iframe", "frame"];
+    const remakeList = ["img", "a", "form", "iframe", "frame", "source", "object"];
     function reloadElements(elemName){
       const scriptList = Array.from(document.getElementsByTagName(elemName));
       
@@ -79,7 +79,7 @@ const injectedScriptRunOnce = ":)";
         if(script.dataset.used === "true") return;
         script.dataset.used = "true";
         
-        const url = script.src || script.href || script.action;
+        const url = script.src || script.href || script.action || script.srcset;
         if(url !== undefined && url !== ""){
           const cleanedUrl = cleanUrl(url);
           console.debug(`Loading ${cleanedUrl}`);
@@ -100,10 +100,12 @@ const injectedScriptRunOnce = ":)";
     }
     
     reloadElements("script");
+    reloadElements("link");
+    
+    reloadElements("source");
     reloadElements("iframe");
     reloadElements("object");
     reloadElements("img");
-    reloadElements("link");
     reloadElements("a");
     reloadElements("form");
   }
