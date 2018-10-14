@@ -79,7 +79,7 @@ app.get("/*", (req, res) => {
         } else{
           index = match.index + match[0].length;
         }
-        const injectedScript = `\n<script id="proxy-injected-script">${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
+        const injectedScript = `\n<script data-used="true">${fs.readFileSync(__dirname + "/inject.js", "utf8")}</script>\n`;
         const newHtml = htmlContent.substring(0, index) + injectedScript + htmlContent.substring(index);
         return res.send(newHtml);
       }
