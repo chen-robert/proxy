@@ -17,7 +17,7 @@ const fixHTML = (html, url) => {
   // Includes protocol (https://)
   const hostName = hostNameRegex.exec(searchStr)[0];
   const protocol =
-    href.indexOf("http://") == -1 ? "https://" : "http://";
+    href.startsWith("http://") ? "http://" : "https://";
 
   const cleanUrl = function(url) {
     const originalUrl = url;
