@@ -53,15 +53,17 @@ app.get("/*", (req, res) => {
       return res.redirect("/" + response.request.uri.href);
     }
     
+    if(response.headers["content-encoding"]) res.setHeader("Content-Encoding", response.headers["content-encoding"]);
+    
     if (response.headers['content-type'] !== undefined) {
       res.setHeader("Content-Type", response.headers['content-type']);
       
       if(response.headers["content-type"].indexOf("text/html") > -1){
-      const contentRegex = /(?<=charset=)[^\s]*/i
-      
-      let regexMatches = contentRegex.exec(response.headers["content-type"]);
-      if(regexMatches == null) regexMatches = ["utf-8"];
-      
+        const contentRegex = /(?<=charset=)[^\s]*/i
+        
+        let regexMatches = contentRegex.exec(response.headers["content-type"]);
+        if(regexMatches == null) regexMatches = ["utf-8"];
+        
         let htmlContent = iconv.decode(body, regexMatches[0]);
         
         const headRegex = /<head.*?>/i;
