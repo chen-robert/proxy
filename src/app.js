@@ -121,6 +121,10 @@ app.get("/*", (req, res) => {
 
     const responseContentType = response.headers["content-type"];
     if (responseContentType !== undefined) {
+      if(responseContentType.includes("charset: UTF-8")){
+        res.status(404);
+        return res.end();
+      }
       res.setHeader("Content-Type", responseContentType);
       if (responseContentType.includes("text/html")) {
         return res.send(processHTML(req, response, body));
@@ -128,7 +132,6 @@ app.get("/*", (req, res) => {
       if(responseContentType.includes("text/css")){
         return res.send(processCSS(req, response, body));
       }
-
     }
     res.send(new Buffer(body));
   });
