@@ -143,6 +143,7 @@ if (!window.injectedScriptRunOnce) {
       reloadElements("a");
       reloadElements("form");
     }
+    /*
     window.addEventListener("load", () => {
       reloadAllElements();
       console.log("Finished proxying");
@@ -153,6 +154,7 @@ if (!window.injectedScriptRunOnce) {
       }
       setInterval(reloadAllElements, 1000);
     });
+    */
 
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
