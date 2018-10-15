@@ -8,6 +8,7 @@ const {fixCSS, fixHTML} = require(__dirname + "/fix.js");
 
 const fs = require("fs");
 
+
 const app = express();
 app.enable("trust proxy");
 const concat = require("concat-stream");
@@ -145,7 +146,7 @@ app.post("/*", (req, res) => {
     "User-Agent": userAgent
   };
   const options = {
-    method: "post",
+    method: "POST",
     body: req.body,
     headers,
     url: url
@@ -158,6 +159,8 @@ app.post("/*", (req, res) => {
 
     if (response.headers["content-encoding"])
       res.setHeader("Content-Encoding", response.headers["content-encoding"]);
+    if (response.headers["location"])
+      res.setHeader("Location", req.protocol + "://" + req.get("host") + "/" + response.headers["location"]);
 
     if (response.headers["content-type"] !== undefined) {
       res.setHeader("Content-Type", response.headers["content-type"]);

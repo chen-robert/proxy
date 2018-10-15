@@ -21,6 +21,27 @@ if (!window.injectedScriptRunOnce) {
     const hostName = hostNameRegex.exec(searchStr)[0];
     const protocol = href.startsWith("http://") ? "http://" : "https://";
 
+    const remakeElem = elem => {
+      const cleanedProps = [
+        "src",
+        "data-original",
+        "href",
+        "action",
+        "codebase"
+      ];
+      cleanedProps.forEach(
+        prop => elem[prop] && (elem[prop] = cleanUrl(elem[prop]))
+      );
+
+      if (elem["srcset"]) {
+        const srcsetArr = elem["srcset"].split(" ");
+        //Hack
+        elem["srcset"] = srcsetArr
+          .map(part => (part.includes("/") ? cleanUrl(part) : part))
+          .join(" ");
+      }
+    };
+
     const cleanUrl = function(url) {
       const originalUrl = url;
 
@@ -87,26 +108,6 @@ if (!window.injectedScriptRunOnce) {
           }
           document.head.appendChild(script);
         };
-        const remakeElem = elem => {
-          const cleanedProps = [
-            "src",
-            "data-original",
-            "href",
-            "action",
-            "codebase"
-          ];
-          cleanedProps.forEach(
-            prop => elem[prop] && (elem[prop] = cleanUrl(elem[prop]))
-          );
-
-          if (elem["srcset"]) {
-            const srcsetArr = elem["srcset"].split(" ");
-            //Hack
-            elem["srcset"] = srcsetArr
-              .map(part => (part.includes("/") ? cleanUrl(part) : part))
-              .join(" ");
-          }
-        };
         scriptList.forEach(script => {
           if (script.dataset.used === "true") return;
           script.dataset.used = "true";
@@ -161,5 +162,14 @@ if (!window.injectedScriptRunOnce) {
     };
     //ensure all XMLHttpRequests use our custom open method
     XMLHttpRequest.prototype.open = myOpen;
+
+    const rewriteAppend = (elem) => {
+      const oriAppend = elem.appendChild;
+      elem.appendChild = (child) => {
+        remakeElem(child);
+        oriAppend.call(elem, child);
+      };
+    }
+    rewriteAppend(document.getElementsByTagName("head")[0]);
   })();
 }

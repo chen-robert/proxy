@@ -106,6 +106,11 @@ const fixHTML = (html, url) => {
         if($elem.attr("style")){
           $elem.attr("style", fixCSS($elem.attr("style"), url));
         }
+
+        // Remove integrity attributes because it messes with our injections
+        if($elem.attr("integrity")){
+          $elem.attr("integrity", null);
+        }
       };
       scriptList.each((i, script) => {
         const $script = $(script);
