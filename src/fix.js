@@ -1,9 +1,13 @@
 const cheerio = require("cheerio");
 
-const fixHTML = (html, url) => {
-  const $ = cheerio.load(html);
+const fixCSS = (css, url) => {
+  const cleanUrl = cleanUrlBase(url);
 
-  const href = url;
+  return css.replace(/(?<=url\().*?(?=\))/gi, (url) => cleanUrl(url));
+}
+
+const cleanUrlBase = baseUrl => {
+  const href = baseUrl;
   const origin = href.substring(0, href.indexOf("/", href.indexOf("://") + 3));
   let pathname = href.substring(
     origin.length,
@@ -21,7 +25,7 @@ const fixHTML = (html, url) => {
   const hostName = hostNameRegex.exec(searchStr)[0];
   const protocol = href.startsWith("http://") ? "http://" : "https://";
 
-  const cleanUrl = function(url) {
+  return function(url) {
     const originalUrl = url;
 
     // If data url, don't proxy
@@ -60,6 +64,13 @@ const fixHTML = (html, url) => {
     //Load from relative path
     return protocol + host + "/" + hostName + "/" + url;
   };
+}
+
+const fixHTML = (html, url) => {
+  const $ = cheerio.load(html);
+
+  const cleanUrl = cleanUrlBase(url);
+
   function reloadAllElements() {
     function reloadElements(elemName) {
       const scriptList = $(elemName);
@@ -91,6 +102,10 @@ const fixHTML = (html, url) => {
           "codebase"
         ];
         cleanedProps.forEach(cleanProp);
+
+        if($elem.attr("style")){
+          $elem.attr("style", fixCSS($elem.attr("style"), url));
+        }
       };
       scriptList.each((i, script) => {
         const $script = $(script);
@@ -100,18 +115,10 @@ const fixHTML = (html, url) => {
       });
     }
 
-    reloadElements("script");
-    reloadElements("link");
-
-    reloadElements("source");
-    reloadElements("iframe");
-    reloadElements("object");
-    reloadElements("img");
-    reloadElements("a");
-    reloadElements("form");
+    reloadElements("*");
   }
   reloadAllElements();
   return $.html();
 };
 
-module.exports = fixHTML;
+module.exports = {fixCSS, fixHTML};

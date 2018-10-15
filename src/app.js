@@ -4,7 +4,7 @@ const compression = require("compression");
 const iconv = require("iconv-lite");
 const express = require("express");
 const request = require("request").defaults({ jar: true });
-const fixHTML = require(__dirname + "/fix.js");
+const {fixCSS, fixHTML} = require(__dirname + "/fix.js");
 
 const fs = require("fs");
 
@@ -39,7 +39,17 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
+const processCSS = (req, response, body) => {
+    const contentRegex = /(?<=charset=)[^\s]*/i;
 
+    let regexMatches = contentRegex.exec(response.headers["content-type"]);
+    if (regexMatches == null) regexMatches = ["utf-8"];
+
+    let css = iconv.decode(body, regexMatches[0]);
+
+    return fixCSS(css,
+    req.protocol + "://" + req.get("host") + (req.originalUrl.includes("://")? req.originalUrl: req.originalUrl.replace(":/", "://")));
+}
 const processHTML = (req, response, body) => {
   const contentRegex = /(?<=charset=)[^\s]*/i;
 
@@ -74,7 +84,7 @@ const processHTML = (req, response, body) => {
     htmlContent.substring(bodyIndex);
   return fixHTML(
     newHtml,
-    req.protocol + "://" + req.get("host") + req.originalUrl
+    req.protocol + "://" + req.get("host") + (req.originalUrl.includes("://")? req.originalUrl: req.originalUrl.replace(":/", "://"))
   );
 };
 app.get("/*", (req, res) => {
@@ -108,12 +118,16 @@ app.get("/*", (req, res) => {
     if (response.headers["content-encoding"])
       res.setHeader("Content-Encoding", response.headers["content-encoding"]);
 
-    if (response.headers["content-type"] !== undefined) {
-      res.setHeader("Content-Type", response.headers["content-type"]);
-
-      if (response.headers["content-type"].indexOf("text/html") > -1) {
+    const responseContentType = response.headers["content-type"];
+    if (responseContentType !== undefined) {
+      res.setHeader("Content-Type", responseContentType);
+      if (responseContentType.includes("text/html")) {
         return res.send(processHTML(req, response, body));
       }
+      if(responseContentType.includes("text/css")){
+        return res.send(processCSS(req, response, body));
+      }
+
     }
     res.send(new Buffer(body));
   });
