@@ -5,6 +5,14 @@ const iconv = require("iconv-lite");
 const express = require("express");
 const request = require("request").defaults({ jar: true });
 const {fixCSS, fixHTML} = require(__dirname + "/fix.js");
+global.atob = (str) => {
+  const oriStr = decodeURIComponent(str).trim();
+  if(!(/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/.test(oriStr)))throw "Invalid Encoding";
+  return Buffer.from(oriStr, "base64").toString();
+}
+global.btoa = (str) => {
+  return encodeURIComponent(Buffer.from(str).toString("base64"));
+}
 
 const fs = require("fs");
 
@@ -40,7 +48,8 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
-const processCSS = (req, response, body) => {
+
+const processCSS = (req, response, body, originalUrl) => {
     const contentRegex = /(?<=charset=)[^\s]*/i;
 
     let regexMatches = contentRegex.exec(response.headers["content-type"]);
@@ -48,10 +57,9 @@ const processCSS = (req, response, body) => {
 
     let css = iconv.decode(body, regexMatches[0]);
 
-    return fixCSS(css,
-    req.protocol + "://" + req.get("host") + (req.originalUrl.includes("://")? req.originalUrl: req.originalUrl.replace(":/", "://")));
+    return fixCSS(css, req.protocol + "://" + req.get("host") + "/" + atob(originalUrl));
 }
-const processHTML = (req, response, body) => {
+const processHTML = (req, response, body, originalUrl) => {
   const contentRegex = /(?<=charset=)[^\s]*/i;
 
   let regexMatches = contentRegex.exec(response.headers["content-type"]);
@@ -85,20 +93,34 @@ const processHTML = (req, response, body) => {
     htmlContent.substring(bodyIndex);
   return fixHTML(
     newHtml,
-    req.protocol + "://" + req.get("host") + (req.originalUrl.includes("://")? req.originalUrl: req.originalUrl.replace(":/", "://"))
+    req.protocol + "://" + req.get("host") + "/" + atob(originalUrl)
   );
 };
 app.get("/*", (req, res) => {
-  let url = req.originalUrl.substring("/".length);
-
-  // Hack for stuff like http://localhost:3000/https:/reddit.com/map
-  if (url.indexOf("//") === -1) {
-    url = url.replace("/", "//");
+  let queryUrl = req.originalUrl.substring("/".length);
+  if(queryUrl.includes("?")){
+    const parts = queryUrl.split("?");
+    if(parts.length === 2){
+      try{
+        queryUrl = btoa(atob(parts[0]) + "?" + parts[1]);
+      }catch(e){
+        res.status(404);
+        return res.send("Invalid url");
+      }
+      return res.redirect("/" + queryUrl);
+    }
   }
+  try{
+    atob(queryUrl);
+  }catch(e){
+    res.status(404);
+    return res.send("Invalid url");
+  }
+  let url = atob(queryUrl);
 
   if (!url.startsWith("https://") && !url.startsWith("http://")) {
-    url = "/https://" + url;
-    return res.redirect(url);
+    url = "https://" + url;
+    return res.redirect(btoa(url));
   }
 
   console.log(`GET ${url}`);
@@ -113,7 +135,7 @@ app.get("/*", (req, res) => {
       return;
     }
     if (response.request.uri.href !== url) {
-      return res.redirect("/" + response.request.uri.href);
+      return res.redirect(btoa(response.request.uri.href));
     }
 
     if (response.headers["content-encoding"])
@@ -127,10 +149,10 @@ app.get("/*", (req, res) => {
       }
       res.setHeader("Content-Type", responseContentType);
       if (responseContentType.includes("text/html")) {
-        return res.send(processHTML(req, response, body));
+        return res.send(processHTML(req, response, body, queryUrl));
       }
       if(responseContentType.includes("text/css")){
-        return res.send(processCSS(req, response, body));
+        return res.send(processCSS(req, response, body, queryUrl));
       }
     }
     res.send(new Buffer(body));
@@ -138,7 +160,14 @@ app.get("/*", (req, res) => {
 });
 
 app.post("/*", (req, res) => {
-  const url = req.originalUrl.substring("/".length);
+  const queryUrl = req.originalUrl.substring("/".length);
+  try{
+    atob(queryUrl);
+  }catch(e){
+    res.status(404);
+    return res.send("Invalid url");
+  }
+  let url = atob(queryUrl);
 
   console.log(`POST ${url}`);
 
@@ -169,11 +198,11 @@ app.post("/*", (req, res) => {
       res.setHeader("Content-Type", response.headers["content-type"]);
 
       if (response.headers["content-type"].indexOf("text/html") > -1) {
-        return res.send(processHTML(req, response, body));
+        return res.send(processHTML(req, response, body, queryUrl));
       }
     }
     res.send(body);
-  });
+  })
 });
 
 //Universal redirect

@@ -1,7 +1,8 @@
 if (!window.injectedScriptRunOnce) {
   window.injectedScriptRunOnce = ":)";
   (function() {
-    const href = window.location.href;
+    const extension = "/";
+    const href = window.location.origin + extension + atob(decodeURIComponent(window.location.pathname.substring(extension.length)));
     const origin = href.substring(
       0,
       href.indexOf("/", href.indexOf("://") + 3)
@@ -22,6 +23,9 @@ if (!window.injectedScriptRunOnce) {
     const protocol = href.startsWith("http://") ? "http://" : "https://";
 
     const remakeElem = elem => {
+      if(elem.dataset){
+        elem.dataset.used = "true";
+      }
       const cleanedProps = [
         "src",
         "data-original",
@@ -42,7 +46,11 @@ if (!window.injectedScriptRunOnce) {
       }
     };
 
-    const cleanUrl = function(url) {
+    const cleanUrl = url => {
+      const finUrl = cleanUrlBase(url);
+      return origin + extension + btoa(finUrl.substring(origin.length + extension.length));
+    }
+    const cleanUrlBase = function(url) {
       const originalUrl = url;
 
       // If data url, don't proxy
@@ -133,7 +141,7 @@ if (!window.injectedScriptRunOnce) {
         });
       }
 
-      reloadElements("script");
+      //reloadElements("script");
       reloadElements("link");
 
       reloadElements("source");
@@ -143,7 +151,7 @@ if (!window.injectedScriptRunOnce) {
       reloadElements("a");
       reloadElements("form");
     }
-    /*
+
     window.addEventListener("load", () => {
       reloadAllElements();
       console.log("Finished proxying");
@@ -154,7 +162,7 @@ if (!window.injectedScriptRunOnce) {
       }
       setInterval(reloadAllElements, 1000);
     });
-    */
+
 
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
@@ -165,13 +173,10 @@ if (!window.injectedScriptRunOnce) {
     //ensure all XMLHttpRequests use our custom open method
     XMLHttpRequest.prototype.open = myOpen;
 
-    const rewriteAppend = (elem) => {
-      const oriAppend = elem.appendChild;
-      elem.appendChild = (child) => {
-        remakeElem(child);
-        oriAppend.call(elem, child);
-      };
+    const oriAppend = HTMLElement.prototype.appendChild;
+    HTMLElement.prototype.appendChild = function(child){
+      remakeElem(child);
+      oriAppend.call(this, child);
     }
-    rewriteAppend(document.getElementsByTagName("head")[0]);
   })();
 }

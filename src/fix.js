@@ -1,12 +1,12 @@
 const cheerio = require("cheerio");
 
 const fixCSS = (css, url) => {
-  const cleanUrl = cleanUrlBase(url);
+  const cleanUrl = cleanUrlFn(url);
 
-  return css.replace(/(?<=url\().*?(?=\))/gi, (url) => cleanUrl(url));
+  return css.replace(/(?<=url\().*?(?=\))/gi, (url) => cleanUrl(url.replace(/('|")/g, "")));
 }
 
-const cleanUrlBase = baseUrl => {
+const cleanUrlFn = baseUrl => {
   const href = baseUrl;
   const origin = href.substring(0, href.indexOf("/", href.indexOf("://") + 3));
   let pathname = href.substring(
@@ -25,7 +25,7 @@ const cleanUrlBase = baseUrl => {
   const hostName = hostNameRegex.exec(searchStr)[0];
   const protocol = href.startsWith("http://") ? "http://" : "https://";
 
-  return function(url) {
+  const cleanUrlBase = function(url) {
     const originalUrl = url;
 
     // If data url, don't proxy
@@ -64,12 +64,22 @@ const cleanUrlBase = baseUrl => {
     //Load from relative path
     return protocol + host + "/" + hostName + "/" + url;
   };
+  return url => {
+    const finUrl = cleanUrlBase(url);
+    if(finUrl.startsWith("data:")) return finUrl;
+
+    if(!finUrl.startsWith(origin)){
+      console.error(`${url} failed to decode properly as ${finUrl}`);
+    }
+
+    return origin + "/" + btoa(finUrl.substring(origin.length + "/".length));
+  }
 }
 
 const fixHTML = (html, url) => {
   const $ = cheerio.load(html);
 
-  const cleanUrl = cleanUrlBase(url);
+  const cleanUrl = cleanUrlFn(url);
 
   function reloadAllElements() {
     function reloadElements(elemName) {
@@ -105,6 +115,10 @@ const fixHTML = (html, url) => {
 
         if($elem.attr("style")){
           $elem.attr("style", fixCSS($elem.attr("style"), url));
+        }
+
+        if($elem[0].name === "style"){
+          $elem.html(fixCSS($elem.html(), url));
         }
 
         // Remove integrity attributes because it messes with our injections
