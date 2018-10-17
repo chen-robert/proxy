@@ -3,8 +3,10 @@ const cheerio = require("cheerio");
 const fixCSS = (css, url) => {
   const cleanUrl = cleanUrlFn(url);
 
-  return css.replace(/(?<=url\().*?(?=\))/gi, (url) => cleanUrl(url.replace(/('|")/g, "")));
-}
+  return css.replace(/(?<=url\().*?(?=\))/gi, url =>
+    cleanUrl(url.replace(/('|")/g, ""))
+  );
+};
 
 const cleanUrlFn = baseUrl => {
   const href = baseUrl;
@@ -19,7 +21,7 @@ const cleanUrlFn = baseUrl => {
   const hostNameRegex = /(?<=\/)http(s)?:\/\/.*?(?=\/)/i;
 
   let searchStr = href;
-  if (searchStr.charAt(searchStr.length - 1) != "/") searchStr += "/";
+  if (searchStr.charAt(searchStr.length - 1) !== "/") searchStr += "/";
 
   // Includes protocol (https://)
   const hostName = hostNameRegex.exec(searchStr)[0];
@@ -33,20 +35,16 @@ const cleanUrlFn = baseUrl => {
 
     // Urls of form `//website.com/resource`
     if (url.startsWith("//")) {
-      return (
-        protocol +
-        host +
-        "/" +
-        (hostName.includes("https") ? "https://" : "http://") +
-        url.substring(2)
-      );
+      return `${protocol + host}/${
+        hostName.includes("https") ? "https://" : "http://"
+      }${url.substring(2)}`;
     }
     // Urls of form `index.js` (note NOT `/index.js`)
     if (!url.includes("/")) {
       const loc = pathname;
       const dir = loc.substring(0, loc.lastIndexOf("/"));
 
-      return protocol + host + dir + "/" + url;
+      return `${protocol + host + dir}/${url}`;
     }
 
     if (url.startsWith(origin)) {
@@ -56,25 +54,25 @@ const cleanUrlFn = baseUrl => {
 
     // Urls of form `https://website.com/data.js`
     if (url.startsWith("http://") || url.startsWith("https://"))
-      return protocol + host + "/" + url;
+      return `${protocol + host}/${url}`;
     // Urls of form `/index.js`
     if (url.charAt(0) === "/") {
-      return protocol + host + "/" + hostName + url;
+      return `${protocol + host}/${hostName}${url}`;
     }
-    //Load from relative path
-    return protocol + host + "/" + hostName + "/" + url;
+    // Load from relative path
+    return `${protocol + host}/${hostName}/${url}`;
   };
   return url => {
     const finUrl = cleanUrlBase(url);
-    if(finUrl.startsWith("data:")) return finUrl;
+    if (finUrl.startsWith("data:")) return finUrl;
 
-    if(!finUrl.startsWith(origin)){
+    if (!finUrl.startsWith(origin)) {
       console.error(`${url} failed to decode properly as ${finUrl}`);
     }
 
-    return origin + "/" + btoa(finUrl.substring(origin.length + "/".length));
-  }
-}
+    return `${origin}/${btoa(finUrl.substring(origin.length + "/".length))}`;
+  };
+};
 
 const fixHTML = (html, url) => {
   const $ = cheerio.load(html);
@@ -113,16 +111,16 @@ const fixHTML = (html, url) => {
         ];
         cleanedProps.forEach(cleanProp);
 
-        if($elem.attr("style")){
+        if ($elem.attr("style")) {
           $elem.attr("style", fixCSS($elem.attr("style"), url));
         }
 
-        if($elem[0].name === "style"){
+        if ($elem[0].name === "style") {
           $elem.html(fixCSS($elem.html(), url));
         }
 
         // Remove integrity attributes because it messes with our injections
-        if($elem.attr("integrity")){
+        if ($elem.attr("integrity")) {
           $elem.attr("integrity", null);
         }
       };
@@ -140,4 +138,4 @@ const fixHTML = (html, url) => {
   return $.html();
 };
 
-module.exports = {fixCSS, fixHTML};
+module.exports = { fixCSS, fixHTML };

@@ -1,8 +1,15 @@
+/* global window, document, atob, btoa, XMLHttpRequest, HTMLElement */
+
 if (!window.injectedScriptRunOnce) {
   window.injectedScriptRunOnce = ":)";
   (function() {
     const extension = "/";
-    const href = window.location.origin + extension + atob(decodeURIComponent(window.location.pathname.substring(extension.length)));
+    const href =
+      window.location.origin +
+      extension +
+      atob(
+        decodeURIComponent(window.location.pathname.substring(extension.length))
+      );
     const origin = href.substring(
       0,
       href.indexOf("/", href.indexOf("://") + 3)
@@ -16,14 +23,14 @@ if (!window.injectedScriptRunOnce) {
     const hostNameRegex = /(?<=\/)http(s)?:\/\/.*?(?=\/)/i;
 
     let searchStr = href;
-    if (searchStr.charAt(searchStr.length - 1) != "/") searchStr += "/";
+    if (searchStr.charAt(searchStr.length - 1) !== "/") searchStr += "/";
 
     // Includes protocol (https://)
     const hostName = hostNameRegex.exec(searchStr)[0];
     const protocol = href.startsWith("http://") ? "http://" : "https://";
 
     const remakeElem = elem => {
-      if(elem.dataset){
+      if (elem.dataset) {
         elem.dataset.used = "true";
       }
       const cleanedProps = [
@@ -37,10 +44,10 @@ if (!window.injectedScriptRunOnce) {
         prop => elem[prop] && (elem[prop] = cleanUrl(elem[prop]))
       );
 
-      if (elem["srcset"]) {
-        const srcsetArr = elem["srcset"].split(" ");
-        //Hack
-        elem["srcset"] = srcsetArr
+      if (elem.srcset) {
+        const srcsetArr = elem.srcset.split(" ");
+        // Hack
+        elem.srcset = srcsetArr
           .map(part => (part.includes("/") ? cleanUrl(part) : part))
           .join(" ");
       }
@@ -48,8 +55,12 @@ if (!window.injectedScriptRunOnce) {
 
     const cleanUrl = url => {
       const finUrl = cleanUrlBase(url);
-      return origin + extension + btoa(finUrl.substring(origin.length + extension.length));
-    }
+      return (
+        origin +
+        extension +
+        btoa(finUrl.substring(origin.length + extension.length))
+      );
+    };
     const cleanUrlBase = function(url) {
       const originalUrl = url;
 
@@ -58,20 +69,16 @@ if (!window.injectedScriptRunOnce) {
 
       // Urls of form `//website.com/resource`
       if (url.startsWith("//")) {
-        return (
-          protocol +
-          host +
-          "/" +
-          (hostName.includes("https") ? "https://" : "http://") +
-          url.substring(2)
-        );
+        return `${protocol + host}/${
+          hostName.includes("https") ? "https://" : "http://"
+        }${url.substring(2)}`;
       }
       // Urls of form `index.js` (note NOT `/index.js`)
       if (!url.includes("/")) {
         const loc = pathname;
         const dir = loc.substring(0, loc.lastIndexOf("/"));
 
-        return protocol + host + dir + "/" + url;
+        return `${protocol + host + dir}/${url}`;
       }
 
       if (url.startsWith(origin)) {
@@ -81,16 +88,16 @@ if (!window.injectedScriptRunOnce) {
 
       // Urls of form `https://website.com/data.js`
       if (url.startsWith("http://") || url.startsWith("https://"))
-        return protocol + host + "/" + url;
+        return `${protocol + host}/${url}`;
       // Urls of form `/index.js`
       if (url.charAt(0) === "/") {
-        return protocol + host + "/" + hostName + url;
+        return `${protocol + host}/${hostName}${url}`;
       }
-      //Load from relative path
-      return protocol + host + "/" + hostName + "/" + url;
+      // Load from relative path
+      return `${protocol + host}/${hostName}/${url}`;
     };
     function reloadAllElements() {
-      //List of elements to remake
+      // List of elements to remake
       const remakeList = [
         "img",
         "a",
@@ -130,18 +137,16 @@ if (!window.injectedScriptRunOnce) {
             } else {
               makeScript(cleanedUrl, script);
             }
-          } else {
-            if (elemName === "script") {
-              const newScriptTag = document.createElement("script");
-              newScriptTag.dataset.used = "true";
-              newScriptTag.innerHTML = script.innerHTML;
-              document.head.appendChild(newScriptTag);
-            }
+          } else if (elemName === "script") {
+            const newScriptTag = document.createElement("script");
+            newScriptTag.dataset.used = "true";
+            newScriptTag.innerHTML = script.innerHTML;
+            document.head.appendChild(newScriptTag);
           }
         });
       }
 
-      //reloadElements("script");
+      // reloadElements("script");
       reloadElements("link");
 
       reloadElements("source");
@@ -163,20 +168,19 @@ if (!window.injectedScriptRunOnce) {
     });
     setInterval(reloadAllElements, 1000);
 
-
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
-    var myOpen = function(method, url, async = true, user, password) {
-      //call original
+    const myOpen = function(method, url, async = true, user, password) {
+      // call original
       this.realOpen(method, cleanUrl(url), async, user, password);
     };
-    //ensure all XMLHttpRequests use our custom open method
+    // ensure all XMLHttpRequests use our custom open method
     XMLHttpRequest.prototype.open = myOpen;
 
     const oriAppend = HTMLElement.prototype.appendChild;
-    HTMLElement.prototype.appendChild = function(child){
+    HTMLElement.prototype.appendChild = function(child) {
       remakeElem(child);
       oriAppend.call(this, child);
-    }
+    };
   })();
 }

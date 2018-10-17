@@ -8,7 +8,7 @@ utils.dataParser = (req, res, next) => {
       next();
     })
   );
-}
+};
 utils.forceSSL = (req, res, next) => {
   // Don't redirect in development
   if (
@@ -19,15 +19,18 @@ utils.forceSSL = (req, res, next) => {
   } else {
     next();
   }
-}
+};
 
-global.atob = (str) => {
+global.atob = str => {
   const oriStr = decodeURIComponent(str).trim();
-  if(!(/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/.test(oriStr)))throw "Invalid Encoding";
+  if (
+    !/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/.test(
+      oriStr
+    )
+  )
+    throw "Invalid Encoding";
   return Buffer.from(oriStr, "base64").toString();
-}
-global.btoa = (str) => {
-  return encodeURIComponent(Buffer.from(str).toString("base64"));
-}
+};
+global.btoa = str => encodeURIComponent(Buffer.from(str).toString("base64"));
 
 module.exports = utils;
