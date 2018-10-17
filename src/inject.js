@@ -160,8 +160,8 @@ if (!window.injectedScriptRunOnce) {
           "none";
         document.body.style.overflow = "";
       }
-      setInterval(reloadAllElements, 1000);
     });
+    setInterval(reloadAllElements, 1000);
 
 
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
