@@ -1,20 +1,20 @@
 const iconv = require("iconv-lite");
 const fs = require("fs");
 
-const { fixCSS, fixHTML } = require(`${__dirname}/fix.js`);
+const { fixCSS, fixJS, fixHTML } = require(`${__dirname}/fix.js`);
 
 const copiedHeaders = ["user-agent", "content-type"];
 
-const processCSS = (req, response, body, originalUrl) => {
+const processScript = (req, response, body, originalUrl, fixFn) => {
   const contentRegex = /(?<=charset=)[^\s]*/i;
 
   let regexMatches = contentRegex.exec(response.headers["content-type"]);
   if (regexMatches == null) regexMatches = ["utf-8"];
 
-  const css = iconv.decode(body, regexMatches[0]);
+  const script = iconv.decode(body, regexMatches[0]);
 
-  return fixCSS(
-    css,
+  return fixFn(
+    script,
     `${req.protocol}://${req.get("host")}/${atob(originalUrl)}`
   );
 };
@@ -33,7 +33,7 @@ const processHTML = (req, response, body, originalUrl) => {
 
   const headIndex = headMatch ? headMatch.index + headMatch[0].length : 0;
   const bodyIndex = bodyMatch ? bodyMatch.index + bodyMatch[0].length : 0;
-  const injectedScript = `\n<script data-used="true">${fs.readFileSync(
+  const injectedScript = `\n<script id="injected-proxyjs-script" data-used="true">${fs.readFileSync(
     `${__dirname}/inject.js`,
     "utf8"
   )}</script>\n`;
@@ -130,7 +130,10 @@ const proxy = (method, request) => (req, res) => {
         return res.send(processHTML(req, response, body, queryUrl));
       }
       if (responseContentType.includes("text/css")) {
-        return res.send(processCSS(req, response, body, queryUrl));
+        return res.send(processScript(req, response, body, queryUrl, fixCSS));
+      }
+      if(responseContentType.includes("application/javascript")){
+        return res.send(processScript(req, response, body, queryUrl, fixJS));
       }
     }
     return res.send(new Buffer(body));

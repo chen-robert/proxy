@@ -8,6 +8,15 @@ const fixCSS = (css, url) => {
   );
 };
 
+const fixJS = (js) => {
+  return js.replace(/location/g, "nocation");
+  /* WIP
+  // Disable use strict to allow for wrapping window
+  const relaxedJS = js.replace(/"use strict";/g, `"use strict";`);
+  return `(function(){${relaxedJS}})`;
+  */
+};
+
 const cleanUrlFn = baseUrl => {
   const href = baseUrl;
   const origin = href.substring(0, href.indexOf("/", href.indexOf("://") + 3));
@@ -115,8 +124,14 @@ const fixHTML = (html, url) => {
           $elem.attr("style", fixCSS($elem.attr("style"), url));
         }
 
-        if ($elem[0].name === "style") {
-          $elem.html(fixCSS($elem.html(), url));
+        switch ($elem[0].name){
+          case "style":
+            $elem.text(fixCSS($elem.html(), url));
+            break;
+          case "script":
+            if($elem.attr("id") === "injected-proxyjs-script")break;
+            $elem.text(fixJS($elem.html()));
+            break;
         }
 
         // Remove integrity attributes because it messes with our injections
@@ -138,4 +153,4 @@ const fixHTML = (html, url) => {
   return $.html();
 };
 
-module.exports = { fixCSS, fixHTML };
+module.exports = { fixCSS, fixJS, fixHTML };
