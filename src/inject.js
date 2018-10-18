@@ -182,5 +182,18 @@ if (!window.injectedScriptRunOnce) {
       remakeElem(child);
       oriAppend.call(this, child);
     };
+
+
+    window._location = (function(){
+      const origin = hostName;
+      const href = pathname.substring(extension.length);
+      const host = hostName.replace(/(https:\/\/|http:\/\/|\/)/g, "");
+      const pathnameFake = href.substring(href.indexOf("/", href.indexOf(host)));
+      const hostname = host.split(":")[0];
+      const port = "";
+      const protocol = "https:";
+
+      return {origin, href, host, pathname: pathnameFake, hostname, port, protocol};
+    })();
   })();
 }

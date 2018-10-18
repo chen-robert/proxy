@@ -9,12 +9,7 @@ const fixCSS = (css, url) => {
 };
 
 const fixJS = (js) => {
-  return js.replace(/location/g, "nocation");
-  /* WIP
-  // Disable use strict to allow for wrapping window
-  const relaxedJS = js.replace(/"use strict";/g, `"use strict";`);
-  return `(function(){${relaxedJS}})`;
-  */
+  return js.replace(/window\.location/, "window._location");
 };
 
 const cleanUrlFn = baseUrl => {
@@ -85,6 +80,8 @@ const cleanUrlFn = baseUrl => {
 
 const fixHTML = (html, url) => {
   const $ = cheerio.load(html);
+  $("title").attr("data-old-title", $("title").text());
+  $("title").text("ProxyJS");
 
   const cleanUrl = cleanUrlFn(url);
 
