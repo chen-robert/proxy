@@ -9,7 +9,9 @@ const fixCSS = (css, url) => {
 };
 
 const fixJS = (js) => {
-  return js.replace(/window\.location/, "window._location");
+  js = js.replace(/window\.location/g, "window._location");
+  js = js.replace(/window\.history/g, "window._history");
+  return js;
 };
 
 const cleanUrlFn = baseUrl => {
@@ -93,17 +95,18 @@ const fixHTML = (html, url) => {
         const cleanProp = prop => {
           if ($elem.attr(prop)) {
             const propArr = $elem.attr(prop).split(" ");
+            const newVal = propArr
+              .map(
+                part =>
+                  part.includes(".") || part.includes("/")
+                    ? cleanUrl(part)
+                    : part
+              )
+              .join(" ");
             // Hack
             $elem.attr(
               prop,
-              propArr
-                .map(
-                  part =>
-                    part.includes(".") || part.includes("/")
-                      ? cleanUrl(part)
-                      : part
-                )
-                .join(" ")
+              newVal
             );
           }
         };

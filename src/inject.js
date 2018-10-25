@@ -51,16 +51,20 @@ if (!window.injectedScriptRunOnce) {
           .map(part => (part.includes("/") ? cleanUrl(part) : part))
           .join(" ");
       }
+      return elem;
     };
 
     const cleanUrl = url => {
-      const finUrl = cleanUrlBase(url);
       return (
         origin +
         extension +
-        btoa(finUrl.substring(origin.length + extension.length))
+        cleanUrlPath(url)
       );
     };
+    const cleanUrlPath = url => {
+      const finUrl = cleanUrlBase(url);
+      return btoa(finUrl.substring(origin.length + extension.length));
+    }
     const cleanUrlBase = function(url) {
       const originalUrl = url;
 
@@ -132,6 +136,7 @@ if (!window.injectedScriptRunOnce) {
           if (url !== undefined && url !== "") {
             const cleanedUrl = cleanUrl(url);
             console.debug(`Loading ${cleanedUrl}`);
+
             if (remakeList.includes(elemName)) {
               remakeElem(script);
             } else {
@@ -165,25 +170,32 @@ if (!window.injectedScriptRunOnce) {
           "none";
         document.body.style.overflow = "";
       }
+      setInterval(reloadAllElements, 1000);
     });
-    setInterval(reloadAllElements, 1000);
 
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
     const myOpen = function(method, url, async = true, user, password) {
+      console.log(url);
       // call original
       this.realOpen(method, cleanUrl(url), async, user, password);
     };
     // ensure all XMLHttpRequests use our custom open method
     XMLHttpRequest.prototype.open = myOpen;
 
-    const oriAppend = HTMLElement.prototype.appendChild;
-    HTMLElement.prototype.appendChild = function(child) {
-      remakeElem(child);
-      oriAppend.call(this, child);
+    const remakeHTMLFn = (fnName) => {
+      const oriFn = HTMLElement.prototype[fnName];
+      HTMLElement.prototype[fnName] = function() {
+        arguments = Array.from(arguments).map(elem => (elem instanceof HTMLElement)? remakeElem(elem): elem);
+        oriFn.call(this, ...arguments);
+      };
+    }
+
+    ["appendChild", "insertBefore"].forEach(remakeHTMLFn);
+
+    window._history = {
+      pushState: (...args) => history.pushState(args[0], args[1], cleanUrlPath(args[2]))
     };
-
-
     window._location = (function(){
       const origin = hostName;
       const href = pathname.substring(extension.length);
@@ -193,7 +205,10 @@ if (!window.injectedScriptRunOnce) {
       const port = "";
       const protocol = "https:";
 
-      return {origin, href, host, pathname: pathnameFake, hostname, port, protocol};
+      return {
+        origin, href, host, pathname: pathnameFake, hostname, port, protocol,
+        replace: (...args) => console.log(args)
+      };
     })();
   })();
 }

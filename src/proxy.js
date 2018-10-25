@@ -3,7 +3,7 @@ const fs = require("fs");
 
 const { fixCSS, fixJS, fixHTML } = require(`${__dirname}/fix.js`);
 
-const copiedHeaders = ["user-agent", "content-type"];
+const copiedHeaders = ["user-agent", "content-type", "range"];
 
 const processScript = (req, response, body, originalUrl, fixFn) => {
   const contentRegex = /(?<=charset=)[^\s]*/i;
@@ -90,6 +90,9 @@ const proxy = (method, request) => (req, res) => {
     const header = req.headers[key];
     if (header) {
       headers = { ...headers, [key]: header };
+      if(key === "range"){
+        req.headers["Accept-Encoding"] = "gzip, deflate, br";
+      }
     }
   });
 
