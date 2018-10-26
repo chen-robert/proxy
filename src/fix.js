@@ -1,5 +1,6 @@
 const cheerio = require("cheerio");
-const crypto = require(__dirname + "/encrypt");
+
+const crypto = require(`${__dirname}/encrypt`);
 
 const fixCSS = (css, url) => {
   const cleanUrl = cleanUrlFn(url);
@@ -9,7 +10,7 @@ const fixCSS = (css, url) => {
   );
 };
 
-const fixJS = (js) => {
+const fixJS = js => {
   js = js.replace(/window\.location/g, "window._location");
   js = js.replace(/window\.history/g, "window._history");
   return js;
@@ -77,7 +78,9 @@ const cleanUrlFn = baseUrl => {
       console.error(`${url} failed to decode properly as ${finUrl}`);
     }
 
-    return `${origin}/${crypto.encode(finUrl.substring(origin.length + "/".length))}`;
+    return `${origin}/${crypto.encode(
+      finUrl.substring(origin.length + "/".length)
+    )}`;
   };
 };
 
@@ -105,10 +108,7 @@ const fixHTML = (html, url) => {
               )
               .join(" ");
             // Hack
-            $elem.attr(
-              prop,
-              newVal
-            );
+            $elem.attr(prop, newVal);
           }
         };
         const cleanedProps = [
@@ -125,12 +125,12 @@ const fixHTML = (html, url) => {
           $elem.attr("style", fixCSS($elem.attr("style"), url));
         }
 
-        switch ($elem[0].name){
+        switch ($elem[0].name) {
           case "style":
             $elem.text(fixCSS($elem.html(), url));
             break;
           case "script":
-            if($elem.attr("id") === "injected-proxyjs-script")break;
+            if ($elem.attr("id") === "injected-proxyjs-script") break;
             $elem.text(fixJS($elem.html()));
             break;
         }
@@ -142,7 +142,7 @@ const fixHTML = (html, url) => {
       };
       scriptList.each((i, script) => {
         const $script = $(script);
-        if($script.attr("data-used") === "true"){
+        if ($script.attr("data-used") === "true") {
           return;
         }
         $script.attr("data-used", "true");

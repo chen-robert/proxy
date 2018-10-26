@@ -7,7 +7,9 @@ if (!window.injectedScriptRunOnce) {
     const href =
       window.location.origin +
       extension +
-      injectedCrypto.decode(window.location.pathname.substring(extension.length));
+      injectedCrypto.decode(
+        window.location.pathname.substring(extension.length)
+      );
     const origin = href.substring(
       0,
       href.indexOf("/", href.indexOf("://") + 3)
@@ -53,16 +55,14 @@ if (!window.injectedScriptRunOnce) {
     };
 
     const cleanUrl = url => {
-      return (
-        origin +
-        extension +
-        cleanUrlPath(url)
-      );
+      return origin + extension + cleanUrlPath(url);
     };
     const cleanUrlPath = url => {
       const finUrl = cleanUrlBase(url);
-      return injectedCrypto.encode(finUrl.substring(origin.length + extension.length));
-    }
+      return injectedCrypto.encode(
+        finUrl.substring(origin.length + extension.length)
+      );
+    };
     const cleanUrlBase = function(url) {
       const originalUrl = url;
 
@@ -180,35 +180,44 @@ if (!window.injectedScriptRunOnce) {
     // ensure all XMLHttpRequests use our custom open method
     XMLHttpRequest.prototype.open = myOpen;
 
-    const remakeHTMLFn = (fnName) => {
+    const remakeHTMLFn = fnName => {
       const oriFn = HTMLElement.prototype[fnName];
       HTMLElement.prototype[fnName] = function() {
         arguments = Array.from(arguments).map(elem => {
-          if(elem instanceof HTMLElement && elem.dataset.used !== "true"){
+          if (elem instanceof HTMLElement && elem.dataset.used !== "true") {
             remakeElem(elem);
           }
           return elem;
         });
         oriFn.call(this, ...arguments);
       };
-    }
+    };
 
     ["appendChild", "insertBefore"].forEach(remakeHTMLFn);
 
     window._history = {
-      pushState: (...args) => history.pushState(args[0], args[1], cleanUrlPath(args[2]))
+      pushState: (...args) =>
+        history.pushState(args[0], args[1], cleanUrlPath(args[2]))
     };
-    window._location = (function(){
+    window._location = (function() {
       const origin = hostName;
       const href = pathname.substring(extension.length);
       const host = hostName.replace(/(https:\/\/|http:\/\/|\/)/g, "");
-      const pathnameFake = href.substring(href.indexOf("/", href.indexOf(host)));
+      const pathnameFake = href.substring(
+        href.indexOf("/", href.indexOf(host))
+      );
       const hostname = host.split(":")[0];
       const port = "";
       const protocol = "https:";
 
       return {
-        origin, href, host, pathname: pathnameFake, hostname, port, protocol,
+        origin,
+        href,
+        host,
+        pathname: pathnameFake,
+        hostname,
+        port,
+        protocol,
         replace: (...args) => console.log(args)
       };
     })();

@@ -1,6 +1,7 @@
 const iconv = require("iconv-lite");
 const fs = require("fs");
-const crypto = require(__dirname + "/encrypt");
+
+const crypto = require(`${__dirname}/encrypt`);
 
 const { fixCSS, fixJS, fixHTML } = require(`${__dirname}/fix.js`);
 
@@ -70,7 +71,7 @@ const proxy = (method, request) => (req, res) => {
     } catch (e) {
       return errorUrl(queryUrl);
     }
-    return res.redirect(extension + `${queryUrl}`);
+    return res.redirect(`${extension}${queryUrl}`);
   }
 
   let url;
@@ -92,7 +93,7 @@ const proxy = (method, request) => (req, res) => {
     const header = req.headers[key];
     if (header) {
       headers = { ...headers, [key]: header };
-      if(key === "range"){
+      if (key === "range") {
         req.headers["Accept-Encoding"] = "gzip, deflate, br";
       }
     }
@@ -137,7 +138,7 @@ const proxy = (method, request) => (req, res) => {
       if (responseContentType.includes("text/css")) {
         return res.send(processScript(req, response, body, queryUrl, fixCSS));
       }
-      if(responseContentType.includes("application/javascript")){
+      if (responseContentType.includes("application/javascript")) {
         return res.send(processScript(req, response, body, queryUrl, fixJS));
       }
     }
