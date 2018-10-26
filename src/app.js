@@ -13,8 +13,11 @@ app.use(util.dataParser);
 app.use(compression());
 app.use(util.forceSSL);
 
+app.get("/encrypt.js", (req, res) => {
+  res.sendFile(`${__dirname}/encrypt.js`);
+});
 app.get("/", (req, res) => {
-  res.sendFile(`${__dirname}/index.html`);
+  res.sendFile(`${__dirname}/client/index.html`);
 });
 
 app.get("/*", proxy("GET", request));

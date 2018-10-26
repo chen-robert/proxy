@@ -1,5 +1,6 @@
 const iconv = require("iconv-lite");
 const fs = require("fs");
+const crypto = require(__dirname + "/encrypt");
 
 const { fixCSS, fixJS, fixHTML } = require(`${__dirname}/fix.js`);
 
@@ -15,7 +16,7 @@ const processScript = (req, response, body, originalUrl, fixFn) => {
 
   return fixFn(
     script,
-    `${req.protocol}://${req.get("host")}/${atob(originalUrl)}`
+    `${req.protocol}://${req.get("host")}/${crypto.decode(originalUrl)}`
   );
 };
 const processHTML = (req, response, body, originalUrl) => {
@@ -33,8 +34,8 @@ const processHTML = (req, response, body, originalUrl) => {
 
   const headIndex = headMatch ? headMatch.index + headMatch[0].length : 0;
   const bodyIndex = bodyMatch ? bodyMatch.index + bodyMatch[0].length : 0;
-  const injectedScript = `\n<script id="injected-proxyjs-script" data-used="true">${fs.readFileSync(
-    `${__dirname}/inject.js`,
+  const injectedScript = `\n<script src="/encrypt.js" data-used="true"></script><script id="injected-proxyjs-script" data-used="true">${fs.readFileSync(
+    `${__dirname}/client/inject.js`,
     "utf8"
   )}</script>\n`;
   /*        const injectedHeader = `\n${fs.readFileSync(
@@ -52,10 +53,11 @@ const processHTML = (req, response, body, originalUrl) => {
     htmlContent.substring(bodyIndex);
   return fixHTML(
     newHtml,
-    `${req.protocol}://${req.get("host")}/${atob(originalUrl)}`
+    `${req.protocol}://${req.get("host")}/${crypto.decode(originalUrl)}`
   );
 };
 const proxy = (method, request) => (req, res) => {
+  const extension = "/";
   const errorUrl = url => {
     res.status(404);
     return res.send(`Invalid url ${url}`);
@@ -64,23 +66,23 @@ const proxy = (method, request) => (req, res) => {
   const parts = queryUrl.split("?");
   if (parts.length === 2) {
     try {
-      queryUrl = btoa(`${atob(parts[0])}?${parts[1]}`);
+      queryUrl = crypto.encode(`${crypto.decode(parts[0])}?${parts[1]}`);
     } catch (e) {
       return errorUrl(queryUrl);
     }
-    return res.redirect(`/${queryUrl}`);
+    return res.redirect(extension + `${queryUrl}`);
   }
 
   let url;
   try {
-    url = atob(queryUrl);
+    url = crypto.decode(queryUrl);
   } catch (e) {
     return errorUrl(queryUrl);
   }
 
   if (!url.startsWith("https://") && !url.startsWith("http://")) {
     url = `https://${url}`;
-    return res.redirect(btoa(url));
+    return res.redirect(extension + crypto.encode(url));
   }
 
   console.log(`${method} ${url}`);
@@ -109,7 +111,7 @@ const proxy = (method, request) => (req, res) => {
   request(options, (error, response, body) => {
     if (error) return errorUrl(url);
     if (response.request.uri.href !== url) {
-      return res.redirect(btoa(response.request.uri.href));
+      return res.redirect(extension + crypto.encode(response.request.uri.href));
     }
 
     if (response.headers["content-encoding"]) {

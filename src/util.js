@@ -22,15 +22,16 @@ utils.forceSSL = (req, res, next) => {
 };
 
 global.atob = str => {
-  const oriStr = decodeURIComponent(str).trim();
+  const oriStr = str;
   if (
     !/^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/.test(
       oriStr
     )
-  )
+  ){
     throw "Invalid Encoding";
+  }
   return Buffer.from(oriStr, "base64").toString();
 };
-global.btoa = str => encodeURIComponent(Buffer.from(str).toString("base64"));
+global.btoa = str => Buffer.from(str).toString("base64");
 
 module.exports = utils;

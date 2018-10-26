@@ -30,10 +30,11 @@
         <input id="search-box" style="border: none; width: 250px; height: 20px; margin: 20px; padding: 5px;" placeholder="Website"></input>
       </div>
     </div>
+    <script src="/encrypt.js"></script>
     <script>
       window.onload = () => document.getElementById("search-box").onkeypress = (e) => {
         if(e.keyCode === 13){
-          window.location = "/" + (encodeURIComponent(btoa(e.target.value)));
+          window.location = "/" + injectedCrypto.encode(e.target.value);
         }
       }
     </script>

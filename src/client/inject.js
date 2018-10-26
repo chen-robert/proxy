@@ -1,4 +1,4 @@
-/* global window, document, atob, btoa, XMLHttpRequest, HTMLElement */
+/* global window, document, injectedCrypto, XMLHttpRequest, HTMLElement */
 
 if (!window.injectedScriptRunOnce) {
   window.injectedScriptRunOnce = ":)";
@@ -7,9 +7,7 @@ if (!window.injectedScriptRunOnce) {
     const href =
       window.location.origin +
       extension +
-      atob(
-        decodeURIComponent(window.location.pathname.substring(extension.length))
-      );
+      injectedCrypto.decode(window.location.pathname.substring(extension.length));
     const origin = href.substring(
       0,
       href.indexOf("/", href.indexOf("://") + 3)
@@ -63,7 +61,7 @@ if (!window.injectedScriptRunOnce) {
     };
     const cleanUrlPath = url => {
       const finUrl = cleanUrlBase(url);
-      return btoa(finUrl.substring(origin.length + extension.length));
+      return injectedCrypto.encode(finUrl.substring(origin.length + extension.length));
     }
     const cleanUrlBase = function(url) {
       const originalUrl = url;
@@ -176,7 +174,6 @@ if (!window.injectedScriptRunOnce) {
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
     const myOpen = function(method, url, async = true, user, password) {
-      console.log(url);
       // call original
       this.realOpen(method, cleanUrl(url), async, user, password);
     };
@@ -186,7 +183,12 @@ if (!window.injectedScriptRunOnce) {
     const remakeHTMLFn = (fnName) => {
       const oriFn = HTMLElement.prototype[fnName];
       HTMLElement.prototype[fnName] = function() {
-        arguments = Array.from(arguments).map(elem => (elem instanceof HTMLElement)? remakeElem(elem): elem);
+        arguments = Array.from(arguments).map(elem => {
+          if(elem instanceof HTMLElement && elem.dataset.used !== "true"){
+            remakeElem(elem);
+          }
+          return elem;
+        });
         oriFn.call(this, ...arguments);
       };
     }

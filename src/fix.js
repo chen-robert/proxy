@@ -1,4 +1,5 @@
 const cheerio = require("cheerio");
+const crypto = require(__dirname + "/encrypt");
 
 const fixCSS = (css, url) => {
   const cleanUrl = cleanUrlFn(url);
@@ -76,7 +77,7 @@ const cleanUrlFn = baseUrl => {
       console.error(`${url} failed to decode properly as ${finUrl}`);
     }
 
-    return `${origin}/${btoa(finUrl.substring(origin.length + "/".length))}`;
+    return `${origin}/${crypto.encode(finUrl.substring(origin.length + "/".length))}`;
   };
 };
 
@@ -141,6 +142,9 @@ const fixHTML = (html, url) => {
       };
       scriptList.each((i, script) => {
         const $script = $(script);
+        if($script.attr("data-used") === "true"){
+          return;
+        }
         $script.attr("data-used", "true");
 
         remakeElem($script);
