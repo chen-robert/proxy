@@ -9,6 +9,8 @@ const fixCSS = (css, url) => {
 };
 
 const fixJS = (js) => {
+  js = `(function(window){\n${js}\n})(_window)`
+  return js;
   js = js.replace(/window\.location/g, "window._location");
   js = js.replace(/window\.history/g, "window._history");
   return js;

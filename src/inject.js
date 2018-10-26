@@ -210,5 +210,18 @@ if (!window.injectedScriptRunOnce) {
         replace: (...args) => console.log(args)
       };
     })();
+    __markFirstPostVisible = () => {};
+    __perfMark = () => {};
+    window._window = new Proxy(window, {
+      get: (obj, prop) => {
+        console.log(prop);
+        if(obj[prop] instanceof Function){
+          const retFn = obj[prop].bind(obj);
+          retFn.prototype = obj[prop].prototype;
+          return retFn;
+        }
+        return obj[prop];
+      }
+    })
   })();
 }
