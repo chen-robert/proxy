@@ -174,9 +174,12 @@ if (!window.injectedScriptRunOnce) {
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
     const myOpen = function(method, url, async = true, user, password) {
-      // call original
       this.realOpen(method, cleanUrl(url), async, user, password);
     };
+    {
+      const oldFn = navigator.sendBeacon.bind(navigator);
+      navigator.sendBeacon = (...args) => oldFn(cleanUrl(args[0]), ...args.slice(1));
+    }
     // ensure all XMLHttpRequests use our custom open method
     XMLHttpRequest.prototype.open = myOpen;
 
