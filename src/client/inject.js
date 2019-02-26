@@ -31,7 +31,7 @@ if (!window.injectedScriptRunOnce) {
 
     const remakeElem = elem => {
       if (elem.dataset) {
-        elem.dataset.used = "true";
+        elem.dataset.used = elem.dataset.used + 1 || 1;
       }
       const cleanedProps = [
         "src",
@@ -55,6 +55,7 @@ if (!window.injectedScriptRunOnce) {
     };
 
     const cleanUrl = url => {
+      if(url.startsWith(origin + extension)) return url;
       return origin + extension + cleanUrlPath(url);
     };
     const cleanUrlPath = url => {
@@ -114,7 +115,7 @@ if (!window.injectedScriptRunOnce) {
 
         const makeScript = function(src, link) {
           const script = document.createElement(elemName);
-          script.dataset.used = "true";
+          script.dataset.used = script.dataset.used + 1 || 1;
 
           if (elemName === "script") {
             script.src = src;
@@ -126,25 +127,16 @@ if (!window.injectedScriptRunOnce) {
           document.head.appendChild(script);
         };
         scriptList.forEach(script => {
-          if (script.dataset.used === "true") return;
-          script.dataset.used = "true";
+          //if (script.dataset.used >= 2) return;
+          script.dataset.used = script.dataset.used + 1 || 1;
 
           const url =
             script.src || script.href || script.action || script.srcset;
           if (url !== undefined && url !== "") {
             const cleanedUrl = cleanUrl(url);
-            console.debug(`Loading ${cleanedUrl}`);
+            console.debug(url, `Loading ${cleanedUrl}`);
 
-            if (remakeList.includes(elemName)) {
-              remakeElem(script);
-            } else {
-              makeScript(cleanedUrl, script);
-            }
-          } else if (elemName === "script") {
-            const newScriptTag = document.createElement("script");
-            newScriptTag.dataset.used = "true";
-            newScriptTag.innerHTML = script.innerHTML;
-            document.head.appendChild(newScriptTag);
+            remakeElem(script);
           }
         });
       }
@@ -168,7 +160,7 @@ if (!window.injectedScriptRunOnce) {
           "none";
         document.body.style.overflow = "";
       }
-      setInterval(reloadAllElements, 1000);
+      setInterval(reloadAllElements, 2500);
     });
 
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;

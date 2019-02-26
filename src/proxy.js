@@ -112,12 +112,17 @@ const proxy = (method, request) => (req, res) => {
   request(options, (error, response, body) => {
     if (error) return errorUrl(url);
     if (response.request.uri.href !== url) {
+    console.log(response.headers);
       return res.redirect(extension + crypto.encode(response.request.uri.href));
     }
 
-    if (response.headers["content-encoding"]) {
-      res.setHeader("Content-Encoding", response.headers["content-encoding"]);
-    }
+    const copiedHeaders = ["content-encoding"];
+    copiedHeaders.forEach(header => {
+      if (response.headers[header]) {
+        res.setHeader(header, response.headers[header]);
+      }
+    });
+
     if (response.headers.location) {
       res.setHeader(
         "Location",
