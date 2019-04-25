@@ -127,7 +127,7 @@ if (!window.injectedScriptRunOnce) {
           document.head.appendChild(script);
         };
         scriptList.forEach(script => {
-          if (script.dataset.used >= 2) return;
+          //if (script.dataset.used >= 2) return;
           script.dataset.used = script.dataset.used + 1 || 1;
 
           const url =
