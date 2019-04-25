@@ -21,13 +21,6 @@ app.get("/auth/:token", (req, res) => {
   res.redirect("/");
 });
 
-app.use((req, res, next) => {
-  if(!req.cookies.authid){
-    return res.redirect("https://bsd405.org");
-  }
-  next();
-});
-
 app.get("/encrypt.js", (req, res) => {
   res.sendFile(`${__dirname}/encrypt.js`);
 });
