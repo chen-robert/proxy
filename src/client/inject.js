@@ -170,6 +170,8 @@ if (!window.injectedScriptRunOnce) {
       }
       setInterval(reloadAllElements, 1000);
     });
+    
+    setInterval(() => document.title = window.__title || "ProxyJS", 100);
 
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 

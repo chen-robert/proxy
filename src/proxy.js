@@ -35,10 +35,13 @@ const processHTML = (req, response, body, originalUrl) => {
 
   const headIndex = headMatch ? headMatch.index + headMatch[0].length : 0;
   const bodyIndex = bodyMatch ? bodyMatch.index + bodyMatch[0].length : 0;
-  const injectedScript = `\n<script src="/encrypt.js" data-used="true"></script><script id="injected-proxyjs-script" data-used="true">${fs.readFileSync(
+  const injectedScript = `\n<script src="/encrypt.js" data-used="true"></script><script id="injected-proxyjs-script" data-used="true">
+  window.__title = "Physics Tutorial";
+  ${fs.readFileSync(
     `${__dirname}/client/inject.js`,
     "utf8"
-  )}</script>\n`;
+  )}
+  </script>\n`;
   /*        const injectedHeader = `\n${fs.readFileSync(
     __dirname + "/loading.html",
     "utf8"
