@@ -23,7 +23,7 @@ app.get("/auth/:token", (req, res) => {
 
 app.use((req, res, next) => {
   if(!req.cookies.authid){
-    return res.redirect("https://bsd405.org");
+    return res.sendFile(`${__dirname}/frameforward.html`);
   }
   next();
 });
