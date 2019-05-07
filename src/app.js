@@ -34,6 +34,7 @@ app.get("/encrypt.js", (req, res) => {
 app.get("/", (req, res) => {
   res.sendFile(`${__dirname}/client/index.html`);
 });
+app.get("/favicon.ico", (req, res) => res.sendFile(`${__dirname}/client/favicon.ico`));
 
 app.get("/*", proxy("GET", request));
 app.post("/*", proxy("POST", request));

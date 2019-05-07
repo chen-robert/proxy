@@ -144,6 +144,9 @@ const proxy = (method, request) => (req, res) => {
       if (responseContentType.includes("application/javascript")) {
         return res.send(processScript(req, response, body, queryUrl, fixJS));
       }
+      if (responseContentType.includes("image/x-icon") || responseContentType.includes("image/vnd.microsoft.icon")){
+        return res.redirect("/favicon.ico");
+      }
     }
     return res.send(new Buffer(body));
   });

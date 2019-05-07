@@ -87,7 +87,6 @@ const cleanUrlFn = baseUrl => {
 const fixHTML = (html, url) => {
   const $ = cheerio.load(html);
   $("title").attr("data-old-title", $("title").text());
-  $("title").text("ProxyJS");
 
   const cleanUrl = cleanUrlFn(url);
 
@@ -119,6 +118,13 @@ const fixHTML = (html, url) => {
           "action",
           "codebase"
         ];
+        
+        // Skip parsing favicon.ico
+        if($elem.attr("rel") !== undefined && $elem.attr("rel").split(" ").includes("icon")) {
+          $elem.remove();
+          return;
+        }
+        
         cleanedProps.forEach(cleanProp);
 
         if ($elem.attr("style")) {
@@ -154,6 +160,7 @@ const fixHTML = (html, url) => {
     reloadElements("*");
   }
   reloadAllElements();
+  $("head").append(`<link rel="icon" href="/favicon.ico" />`);
   return $.html();
 };
 
