@@ -22,6 +22,12 @@ app.get("/auth/:token", (req, res) => {
 });
 
 app.use((req, res, next) => {
+  if(!req.cookies.key) res.cookie("key", crypto.randomBytes(40).toString('hex'));
+  
+  next();
+});
+
+app.use((req, res, next) => {
   if(!req.cookies.authid){
     return res.sendFile(`${__dirname}/frameforward.html`);
   }
