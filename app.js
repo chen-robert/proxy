@@ -1,3 +1,5 @@
+global.__rootdir = __dirname;
+
 const PORT = process.env.PORT || 3000;
 
 const compression = require("compression");
@@ -5,8 +7,8 @@ const crypto = require("crypto");
 const express = require("express");
 const request = require("request").defaults({ jar: true });
 
-const proxy = require(`${__dirname}/proxy.js`);
-const util = require(`${__dirname}/util.js`);
+const proxy = require(`${__dirname}/src/proxy.js`);
+const util = require(`${__dirname}/src/util.js`);
 
 const app = express();
 app.enable("trust proxy");
@@ -29,15 +31,15 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   if(!req.cookies.authid){
-    return res.sendFile(`${__dirname}/frameforward.html`);
+    return res.sendFile(`${__dirname}/src/frameforward.html`);
   }
   next();
 });
 
 app.get("/encrypt.js", (req, res) => {
-  res.sendFile(`${__dirname}/encrypt.js`);
+  res.sendFile(`${__dirname}/src/encrypt.js`);
 });
-app.use(express.static(`${__dirname}/client`))
+app.use(express.static(`${__dirname}/src/client`))
 
 app.get("/*", proxy("GET", request));
 app.post("/*", proxy("POST", request));

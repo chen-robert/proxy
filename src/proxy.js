@@ -2,6 +2,7 @@ const iconv = require("iconv-lite");
 const fs = require("fs");
 
 const crypto = require(`${__dirname}/encrypt`);
+const log = require(`${__dirname}/log`);
 
 const { fixCSS, fixJS, fixHTML } = require(`${__dirname}/fix.js`);
 
@@ -62,7 +63,9 @@ const processHTML = (req, response, body, originalUrl, secret) => {
   );
 };
 const proxy = (method, request) => (req, res) => {
+  const id = req.cookies.authid;
   const secret = req.cookies._key;
+
   const extension = "/";
   const errorUrl = url => {
     res.status(404);
@@ -83,19 +86,19 @@ const proxy = (method, request) => (req, res) => {
   try {
     url = crypto.decode(queryUrl, secret);
   } catch (e) {
-    console.log(`Failed to decode ${queryUrl}`)
+    log(id, `Failed to decode ${queryUrl}`)
     return errorUrl(queryUrl);
   }
-  console.log("Used secret " + secret)
-  console.log("Decrypted as " + url)
+  
+  log(id, "Used secret " + secret)
   if (!url.startsWith("https://") && !url.startsWith("http://")) {
     url = `https://${url}`;
-    console.log(`Redirected to ${url}`)
+    log(id, `Redirected to ${url}`)
     if(crypto.decode(crypto.encode(url, secret), secret) !== url) console.log("RIPPPPP")
     return res.redirect(extension + crypto.encode(url, secret));
   }
 
-  console.log(`${method} ${url}`);
+  log(id, `${method} ${url}`);
 
   let headers = {};
   copiedHeaders.forEach(key => {
