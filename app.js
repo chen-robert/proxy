@@ -1,6 +1,7 @@
 global.__rootdir = __dirname;
 
 const PORT = process.env.PORT || 3000;
+const version = "v0_";
 
 const compression = require("compression");
 const crypto = require("crypto");
@@ -17,20 +18,28 @@ app.use(compression());
 app.use(require("cookie-parser")());
 app.use(util.forceSSL);
 
+const MAC = "aria-label=";
 app.get("/auth/:token", (req, res) => {
-  if(req.params.token === "proxy") res.cookie("authid", crypto.randomBytes(40).toString('hex'), { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: true});
-  
+  if(req.params.token) {
+    const decoded = Buffer.from(req.params.token, "hex").toString("utf8");
+    if(decoded.substring(0, MAC.length) === MAC) {
+      res.cookie("authid", version + decoded.substring(MAC.length), { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: true});
+    }
+  }
+
   res.redirect("/");
 });
 
+app.get("/auth/generate/:token", (req, res) => res.send(Buffer.from(MAC + req.params.token, "utf8").toString("hex")))
+
 app.use((req, res, next) => {
   if(!req.cookies._key || req.cookies._key.length != 64) res.cookie("_key", crypto.randomBytes(32).toString('hex'));
-  
+
   next();
 });
 
 app.use((req, res, next) => {
-  if(!req.cookies.authid){
+  if(!req.cookies.authid || !req.cookies.authid.startsWith(version)){
     return res.sendFile(`${__dirname}/src/frameforward.html`);
   }
   next();
