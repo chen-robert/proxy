@@ -5,7 +5,7 @@
   let fallback = "__default_secret"
   if(typeof window !== "undefined") { 
     document.cookie.split(";").forEach(val => {
-      parts = val.split("=");
+      parts = val.trim().split("=");
       if(parts[0] === "_key") {
         fallback = parts[1]
       }
