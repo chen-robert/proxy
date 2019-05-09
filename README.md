@@ -12,5 +12,3 @@ should be transformed to
 <img src="https://our.proxy/https://website.com/cats.png"></img>
 ```
 *(assuming the host is `website.com`)*
-#### Instance
-A running instance can be found [here](http://proxyjs.herokuapp.com)
