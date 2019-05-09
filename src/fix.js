@@ -2,21 +2,21 @@ const cheerio = require("cheerio");
 
 const crypto = require(`${__dirname}/encrypt`);
 
-const fixCSS = (css, url) => {
-  const cleanUrl = cleanUrlFn(url);
+const fixCSS = (css, baseUrl, secret) => {
+  const cleanUrl = cleanUrlFn(baseUrl, secret);
 
   return css.replace(/(?<=url\().*?(?=\))/gi, url =>
     cleanUrl(url.replace(/('|")/g, ""))
   );
 };
 
-const fixJS = js => {
+const fixJS = (js, baseUrl, secret) => {
   js = js.replace(/window\.location/g, "window._location");
   js = js.replace(/window\.history/g, "window._history");
   return js;
 };
 
-const cleanUrlFn = baseUrl => {
+const cleanUrlFn = (baseUrl, secret) => {
   const href = baseUrl;
   const origin = href.substring(0, href.indexOf("/", href.indexOf("://") + 3));
   let pathname = href.substring(
@@ -79,16 +79,16 @@ const cleanUrlFn = baseUrl => {
     }
 
     return `${origin}/${crypto.encode(
-      finUrl.substring(origin.length + "/".length)
+      finUrl.substring(origin.length + "/".length), secret
     )}`;
   };
 };
 
-const fixHTML = (html, url) => {
+const fixHTML = (html, url, secret) => {
   const $ = cheerio.load(html);
   $("title").attr("data-old-title", $("title").text());
 
-  const cleanUrl = cleanUrlFn(url);
+  const cleanUrl = cleanUrlFn(url, secret);
 
   function reloadAllElements() {
     function reloadElements(elemName) {
@@ -128,16 +128,16 @@ const fixHTML = (html, url) => {
         cleanedProps.forEach(cleanProp);
 
         if ($elem.attr("style")) {
-          $elem.attr("style", fixCSS($elem.attr("style"), url));
+          $elem.attr("style", fixCSS($elem.attr("style"), url, secret));
         }
 
         switch ($elem[0].name) {
           case "style":
-            $elem.text(fixCSS($elem.html(), url));
+            $elem.text(fixCSS($elem.html(), url, secret));
             break;
           case "script":
             if ($elem.attr("id") === "injected-proxyjs-script") break;
-            $elem.text(fixJS($elem.html()));
+            $elem.text(fixJS($elem.html(), url, secret));
             break;
         }
 

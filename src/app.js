@@ -22,7 +22,7 @@ app.get("/auth/:token", (req, res) => {
 });
 
 app.use((req, res, next) => {
-  if(!req.cookies.key) res.cookie("key", crypto.randomBytes(40).toString('hex'));
+  if(!req.cookies._key || req.cookies._key.length != 64) res.cookie("_key", crypto.randomBytes(32).toString('hex'));
   
   next();
 });
@@ -37,10 +37,7 @@ app.use((req, res, next) => {
 app.get("/encrypt.js", (req, res) => {
   res.sendFile(`${__dirname}/encrypt.js`);
 });
-app.get("/", (req, res) => {
-  res.sendFile(`${__dirname}/client/index.html`);
-});
-app.get("/favicon.ico", (req, res) => res.sendFile(`${__dirname}/client/favicon.ico`));
+app.use(express.static(`${__dirname}/client`))
 
 app.get("/*", proxy("GET", request));
 app.post("/*", proxy("POST", request));

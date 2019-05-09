@@ -7,20 +7,20 @@ const { fixCSS, fixJS, fixHTML } = require(`${__dirname}/fix.js`);
 
 const copiedHeaders = ["user-agent", "content-type", "range"];
 
-const processScript = (req, response, body, originalUrl, fixFn) => {
+const processScript = (req, response, body, originalUrl, fixFn, secret) => {
   const contentRegex = /(?<=charset=)[^\s]*/i;
 
   let regexMatches = contentRegex.exec(response.headers["content-type"]);
   if (regexMatches == null) regexMatches = ["utf-8"];
 
   const script = iconv.decode(body, regexMatches[0]);
-
   return fixFn(
     script,
-    `${req.protocol}://${req.get("host")}/${crypto.decode(originalUrl)}`
+    `${req.protocol}://${req.get("host")}/${crypto.decode(originalUrl, secret)}`,
+    secret
   );
 };
-const processHTML = (req, response, body, originalUrl) => {
+const processHTML = (req, response, body, originalUrl, secret) => {
   const contentRegex = /(?<=charset=)[^\s]*/i;
 
   let regexMatches = contentRegex.exec(response.headers["content-type"]);
@@ -35,7 +35,7 @@ const processHTML = (req, response, body, originalUrl) => {
 
   const headIndex = headMatch ? headMatch.index + headMatch[0].length : 0;
   const bodyIndex = bodyMatch ? bodyMatch.index + bodyMatch[0].length : 0;
-  const injectedScript = `\n<script src="/encrypt.js" data-used="true"></script><script id="injected-proxyjs-script" data-used="true">
+  const injectedScript = `\n<script src="/aes.js" data-used="true"></script><script src="/encrypt.js" data-used="true"></script><script id="injected-proxyjs-script" data-used="true">
   window.__title = "Physics Tutorial";
   ${fs.readFileSync(
     `${__dirname}/client/inject.js`,
@@ -57,10 +57,12 @@ const processHTML = (req, response, body, originalUrl) => {
     htmlContent.substring(bodyIndex);
   return fixHTML(
     newHtml,
-    `${req.protocol}://${req.get("host")}/${crypto.decode(originalUrl)}`
+    `${req.protocol}://${req.get("host")}/${crypto.decode(originalUrl, secret)}`,
+    secret
   );
 };
 const proxy = (method, request) => (req, res) => {
+  const secret = req.cookies._key;
   const extension = "/";
   const errorUrl = url => {
     res.status(404);
@@ -70,7 +72,7 @@ const proxy = (method, request) => (req, res) => {
   const parts = queryUrl.split("?");
   if (parts.length === 2) {
     try {
-      queryUrl = crypto.encode(`${crypto.decode(parts[0])}?${parts[1]}`);
+      queryUrl = crypto.encode(`${crypto.decode(parts[0], secret)}?${parts[1]}`, secret);
     } catch (e) {
       return errorUrl(queryUrl);
     }
@@ -79,14 +81,18 @@ const proxy = (method, request) => (req, res) => {
 
   let url;
   try {
-    url = crypto.decode(queryUrl);
+    url = crypto.decode(queryUrl, secret);
   } catch (e) {
+    console.log(`Failed to decode ${queryUrl}`)
     return errorUrl(queryUrl);
   }
-
+  console.log("Used secret " + secret)
+  console.log("Decrypted as " + url)
   if (!url.startsWith("https://") && !url.startsWith("http://")) {
     url = `https://${url}`;
-    return res.redirect(extension + crypto.encode(url));
+    console.log(`Redirected to ${url}`)
+    if(crypto.decode(crypto.encode(url, secret), secret) !== url) console.log("RIPPPPP")
+    return res.redirect(extension + crypto.encode(url, secret));
   }
 
   console.log(`${method} ${url}`);
@@ -115,7 +121,7 @@ const proxy = (method, request) => (req, res) => {
   request(options, (error, response, body) => {
     if (error) return errorUrl(url);
     if (response.request.uri.href !== url) {
-      return res.redirect(extension + crypto.encode(response.request.uri.href));
+      return res.redirect(extension + crypto.encode(response.request.uri.href, secret));
     }
 
     if (response.headers["content-encoding"]) {
@@ -136,13 +142,13 @@ const proxy = (method, request) => (req, res) => {
       }
       res.setHeader("Content-Type", responseContentType);
       if (responseContentType.includes("text/html")) {
-        return res.send(processHTML(req, response, body, queryUrl));
+        return res.send(processHTML(req, response, body, queryUrl, secret));
       }
       if (responseContentType.includes("text/css")) {
-        return res.send(processScript(req, response, body, queryUrl, fixCSS));
+        return res.send(processScript(req, response, body, queryUrl, fixCSS, secret));
       }
       if (responseContentType.includes("application/javascript")) {
-        return res.send(processScript(req, response, body, queryUrl, fixJS));
+        return res.send(processScript(req, response, body, queryUrl, fixJS, secret));
       }
       if (responseContentType.includes("image/x-icon") || responseContentType.includes("image/vnd.microsoft.icon")){
         return res.redirect("/favicon.ico");
