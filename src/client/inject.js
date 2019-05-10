@@ -130,6 +130,21 @@ if (!window.injectedScriptRunOnce) {
     // ensure all XMLHttpRequests use our custom open method
     XMLHttpRequest.prototype.open = myOpen;
 
+    const remakeHTMLFn = fnName => {
+      const oriFn = HTMLElement.prototype[fnName];
+      HTMLElement.prototype[fnName] = function() {
+        arguments = Array.from(arguments).map(elem => {
+          if (elem instanceof HTMLElement && elem.dataset.used !== "true") {
+            remakeElem(elem);
+          }
+          return elem;
+        });
+        oriFn.call(this, ...arguments);
+      };
+    };
+
+    ["appendChild", "insertBefore"].forEach(remakeHTMLFn);
+
     window._history = {
       pushState: (...args) => console.log(args)
     };
