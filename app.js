@@ -3,7 +3,6 @@ global.__rootdir = __dirname;
 const PORT = process.env.PORT || 3000;
 const version = "v0_";
 
-const compression = require("compression");
 const nocache = require('nocache');
 const crypto = require("crypto");
 const express = require("express");
@@ -16,7 +15,6 @@ const app = express();
 app.enable("trust proxy");
 app.use(util.dataParser);
 app.use(nocache());
-app.use(compression());
 app.use(require("cookie-parser")());
 app.use(util.forceSSL);
 
