@@ -32,6 +32,7 @@
     "express": "^4.16.3",
     "extend": "^3.0.2",
     "iconv-lite": "^0.4.23",
+    "nocache": "^2.1.0",
     "request": "^2.87.0"
   },
   "devDependencies": {
