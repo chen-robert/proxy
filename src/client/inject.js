@@ -30,6 +30,7 @@ if (!window.injectedScriptRunOnce) {
     const protocol = href.startsWith("http://") ? "http://" : "https://";
 
     const remakeElem = elem => {
+      console.log(elem);
       const cleanedProps = [
         "src",
         "data-original",
@@ -48,9 +49,10 @@ if (!window.injectedScriptRunOnce) {
       if (elem.srcset) {
         const srcsetArr = elem.srcset.split(" ");
         // Hack
-        elem.srcset = srcsetArr
-          .map(part => (part.includes("/") ? cleanUrl(part) : part))
+        const next = srcsetArr
+          .map(part => (part.includes("/") && !part.startsWith(origin) ? cleanUrl(part) : part))
           .join(" ");
+        if(elem.srcset !== next) elem.srcset = next;
       }
       return elem;
     };
@@ -112,7 +114,10 @@ if (!window.injectedScriptRunOnce) {
     observer.observe(document, observerOptions);
     
     
-    setInterval(() => document.title = window.__title || "ProxyJS", 100);
+    setInterval(() => {
+      const newTitle = window.__title || "ProxyJS";
+      if(document.title !== newTitle) document.title = newTitle;
+    }, 100);
 
     XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
 
