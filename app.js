@@ -38,6 +38,12 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/reset", (req, res) => {
+  res.cookie("_key", {maxAge: Date.now()});
+  
+  res.redirect("/");
+});
+
 app.use((req, res, next) => {
   if(!req.cookies.authid || !req.cookies.authid.startsWith(version)){
     return res.sendFile(`${__dirname}/src/frameforward.html`);
