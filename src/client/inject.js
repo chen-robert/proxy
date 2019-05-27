@@ -55,14 +55,22 @@ if (!window.injectedScriptRunOnce) {
         if(elem.srcset !== next) elem.srcset = next;
       }
       if (elem.style && elem.style.cssText) {
+        /*
+          Minor cleaning of style urls. 
+          
+          Remove single and double quotes that may surround the url, e.g. "https://google.com/img.png"
+          Also remove backslashes as a hack to fix escaped characters in css variable declarations. 
+            e.g. --yt-channel-banner: url(http\:\/\/...)
+        */
+        const clean = url => url.replace(/('|"|\\)/g, "");
+        
         const encoded = elem.style.cssText.replace(/(?<=url\().*?(?=\))/gi, url => {
-            url = url.replace(/('|")/g, "")
+            url = clean(url);
             return isEncoded(url) ? url : cleanUrl(url)
           }
         );
         
-        // Check if not identical after minor cleaning, e.g. removing quotes.
-        if(elem.style.cssText.replace(/('|")/g, "") !== encoded.replace(/('|")/g, "")) {
+        if(clean(elem.style.cssText) !== clean(encoded)) {
           elem.style.cssText = encoded;
         }
       }
@@ -70,6 +78,9 @@ if (!window.injectedScriptRunOnce) {
     };
 
     const cleanUrl = url => {      
+      // If data url, don't proxy
+      if (url.startsWith("data:"))return url;
+      
       return origin + extension + cleanUrlPath(url);
     };
     const cleanUrlPath = url => {
@@ -80,9 +91,6 @@ if (!window.injectedScriptRunOnce) {
     };
     const cleanUrlBase = function(url) {
       const originalUrl = url;
-
-      // If data url, don't proxy
-      if (url.startsWith("data:")) return url;
 
       // Urls of form `//website.com/resource`
       if (url.startsWith("//")) {
@@ -131,18 +139,18 @@ if (!window.injectedScriptRunOnce) {
       if(document.title !== newTitle) document.title = newTitle;
     }, 100);
 
-    XMLHttpRequest.prototype.realOpen = XMLHttpRequest.prototype.open;
-
-    const myOpen = function(method, url, async = true, user, password) {
-      this.realOpen(method, cleanUrl(url), async, user, password);
-    };
     {
       const oldFn = navigator.sendBeacon.bind(navigator);
       navigator.sendBeacon = (...args) => oldFn(cleanUrl(args[0]), ...args.slice(1));
     }
+    XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
+
+    const myOpen = function(method, url, async = true, user, password) {
+      this._open(method, cleanUrl(url), async, user, password);
+    };
     // ensure all XMLHttpRequests use our custom open method
     XMLHttpRequest.prototype.open = myOpen;
-
+    
     const remakeHTMLFn = fnName => {
       const oriFn = HTMLElement.prototype[fnName];
       HTMLElement.prototype[fnName] = function() {
@@ -159,7 +167,7 @@ if (!window.injectedScriptRunOnce) {
     ["appendChild", "insertBefore"].forEach(remakeHTMLFn);
 
     window._history = {
-      pushState: (...args) => console.log("Push State:", args)
+      pushState: (state, page, url) => window.history.pushState(state, page, cleanUrl(url))
     };
     window._location = (function() {
       const origin = hostName;
