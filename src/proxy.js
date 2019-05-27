@@ -131,6 +131,8 @@ const proxy = (method, getRequestFn) => (req, res) => {
   if (req.body.length !== 0) {
     options = { ...options, body: req.body };
   }
+  
+  if(req.headers["content-type"] === "application/x-www-form-urlencoded") log(id, `${method} ${req.headers["content-type"]} ${req.body.toString()}`);
 
   getRequestFn(req.cookies.authid)(options, (error, response, body) => {
     if (error) return errorUrl(url);
