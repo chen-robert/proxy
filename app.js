@@ -6,7 +6,9 @@ const version = "v0_";
 const nocache = require('nocache');
 const crypto = require("crypto");
 const express = require("express");
-const request = require("request").defaults({ jar: true });
+const FileCookieStore = require("tough-cookie-filestore");
+
+const getRequestFn = require(`${__dirname}/src/jars.js`);
 
 const proxy = require(`${__dirname}/src/proxy.js`);
 const util = require(`${__dirname}/src/util.js`);
@@ -56,10 +58,10 @@ app.get("/encrypt.js", (req, res) => {
 });
 app.use(express.static(`${__dirname}/src/client`))
 
-app.get("/*", proxy("GET", request));
-app.post("/*", proxy("POST", request));
-app.patch("/*", proxy("PATCH", request));
-app.put("/*", proxy("PUT", request));
+app.get("/*", proxy("GET", getRequestFn));
+app.post("/*", proxy("POST", getRequestFn));
+app.patch("/*", proxy("PATCH", getRequestFn));
+app.put("/*", proxy("PUT", getRequestFn));
 
 // Redirect all other requests to home page
 app.get("*", (req, res) => res.redirect("/"));

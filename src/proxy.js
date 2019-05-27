@@ -63,7 +63,7 @@ const processHTML = (req, response, body, originalUrl, secret) => {
 };
 
 const copiedHeaders = ["user-agent", "content-type", "range", "authorization"];
-const proxy = (method, request) => (req, res) => {
+const proxy = (method, getRequestFn) => (req, res) => {
   const id = req.cookies.authid;
   const secret = req.cookies._key;
 
@@ -132,7 +132,7 @@ const proxy = (method, request) => (req, res) => {
     options = { ...options, body: req.body };
   }
 
-  request(options, (error, response, body) => {
+  getRequestFn(req.cookies.authid)(options, (error, response, body) => {
     if (error) return errorUrl(url);
     if (response.request.uri.href !== url) {
       return res.redirect(extension + crypto.encode(response.request.uri.href, secret));

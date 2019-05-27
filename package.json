@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier \"src/**/*.js\" --write",
     "lint": "eslint --fix ./src",
-    "dev": "nodemon app.js",
+    "dev": "nodemon app.js --ignore tmp/ --ignore logs/",
     "start": "node app.js"
   },
   "repository": {
@@ -32,7 +32,8 @@
     "extend": "^3.0.2",
     "iconv-lite": "^0.4.23",
     "nocache": "^2.1.0",
-    "request": "^2.87.0"
+    "request": "^2.87.0",
+    "tough-cookie-filestore": "0.0.1"
   },
   "devDependencies": {
     "eslint": "^5.7.0",
