@@ -17,7 +17,7 @@
 
   const getKey = secret => aesjs.utils.hex.toBytes(secret || fallback);
   
-  const urlBase = "loadurl/";
+  const urlBase = "l/";
   exports.encode = (text, secret) => {
     const key = getKey(secret);
     const aesCtr = new aesjs.ModeOfOperation.ctr(key);
