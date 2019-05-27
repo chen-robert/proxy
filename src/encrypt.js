@@ -17,7 +17,7 @@
 
   const getKey = secret => aesjs.utils.hex.toBytes(secret || fallback);
   
-  const urlBase = "l/";
+  const urlBase = "loadurl/";
   exports.encode = (text, secret) => {
     const key = getKey(secret);
     const aesCtr = new aesjs.ModeOfOperation.ctr(key);
@@ -43,4 +43,5 @@
       })
       .join("/");
     }
+  exports.isEncoded = url => url.startsWith(urlBase);
 })(typeof exports === "undefined" ? (window.injectedCrypto = {}) : exports);

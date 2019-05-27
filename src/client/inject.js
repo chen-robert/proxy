@@ -39,7 +39,8 @@ if (!window.injectedScriptRunOnce) {
       ];
       cleanedProps.forEach(
         prop => {
-          if(elem[prop] && !elem[prop].startsWith(origin)){
+          if(elem[prop] && !(elem[prop].startsWith(origin) && injectedCrypto.isEncoded(elem[prop].substring((origin + "/").length)))){
+            
             elem[prop] = cleanUrl(elem[prop]);
           }
         }
@@ -158,7 +159,7 @@ if (!window.injectedScriptRunOnce) {
       const hostname = host.split(":")[0];
       const port = "";
       const protocol = "https:";
-
+      
       return {
         origin,
         href,
@@ -167,8 +168,10 @@ if (!window.injectedScriptRunOnce) {
         hostname,
         port,
         protocol,
-        replace: (...args) => console.log(args)
-      };
+        replace: (...args) => console.log(args),
+        search: "",
+        hash: ""
+      };      
     })();
   })();
 }

@@ -11,7 +11,7 @@ const fixCSS = (css, baseUrl, secret) => {
 };
 
 const fixJS = (js, baseUrl, secret) => {
-  js = js.replace(/window\.location/g, "window._location");
+  js = js.replace(/location/g, "_location");
   js = js.replace(/window\.history/g, "window._history");
   return js;
 };

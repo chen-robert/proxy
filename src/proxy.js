@@ -6,7 +6,6 @@ const log = require(`${__dirname}/log`);
 
 const { fixCSS, fixJS, fixHTML } = require(`${__dirname}/fix.js`);
 
-const copiedHeaders = ["user-agent", "content-type", "range"];
 
 const processScript = (req, response, body, originalUrl, fixFn, secret) => {
   const contentRegex = /(?<=charset=)[^\s]*/i;
@@ -62,6 +61,8 @@ const processHTML = (req, response, body, originalUrl, secret) => {
     secret
   );
 };
+
+const copiedHeaders = ["user-agent", "content-type", "range"];
 const proxy = (method, request) => (req, res) => {
   const id = req.cookies.authid;
   const secret = req.cookies._key;
@@ -100,9 +101,10 @@ const proxy = (method, request) => (req, res) => {
     }
     return res.redirect(extension + crypto.encode(url, secret));
   }
-
+  
   log(id, `${method} ${url}`);
 
+  // Copy user-agent, content-type, and range headers
   let headers = {};
   copiedHeaders.forEach(key => {
     const header = req.headers[key];
@@ -111,6 +113,13 @@ const proxy = (method, request) => (req, res) => {
       if (key === "range") {
         req.headers["Accept-Encoding"] = "gzip, deflate, br";
       }
+    }
+  });
+  
+  // Copy custom "x-" headers, e.g. X-Fingerprint
+  Object.keys(req.headers).forEach(header => {
+    if(header.startsWith("x-")) {
+      copiedHeaders[header] = req.headers[header];
     }
   });
 
