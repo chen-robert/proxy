@@ -29,6 +29,7 @@ if (!window.injectedScriptRunOnce) {
     const hostName = hostNameRegex.exec(searchStr)[0];
     const protocol = href.startsWith("http://") ? "http://" : "https://";
 
+    const isEncoded = url => url.startsWith(origin) && injectedCrypto.isEncoded(url.substring((origin + "/").length))
     const remakeElem = elem => {
       const cleanedProps = [
         "src",
@@ -39,8 +40,7 @@ if (!window.injectedScriptRunOnce) {
       ];
       cleanedProps.forEach(
         prop => {
-          if(elem[prop] && !(elem[prop].startsWith(origin) && injectedCrypto.isEncoded(elem[prop].substring((origin + "/").length)))){
-            
+          if(elem[prop] && !isEncoded(elem[prop])){
             elem[prop] = cleanUrl(elem[prop]);
           }
         }
@@ -53,6 +53,18 @@ if (!window.injectedScriptRunOnce) {
           .map(part => (part.includes("/") && !part.startsWith(origin) ? cleanUrl(part) : part))
           .join(" ");
         if(elem.srcset !== next) elem.srcset = next;
+      }
+      if (elem.style && elem.style.cssText) {
+        const encoded = elem.style.cssText.replace(/(?<=url\().*?(?=\))/gi, url => {
+            url = url.replace(/('|")/g, "")
+            return isEncoded(url) ? url : cleanUrl(url)
+          }
+        );
+        
+        // Check if not identical after minor cleaning, e.g. removing quotes.
+        if(elem.style.cssText.replace(/('|")/g, "") !== encoded.replace(/('|")/g, "")) {
+          elem.style.cssText = encoded;
+        }
       }
       return elem;
     };
@@ -147,7 +159,7 @@ if (!window.injectedScriptRunOnce) {
     ["appendChild", "insertBefore"].forEach(remakeHTMLFn);
 
     window._history = {
-      pushState: (...args) => console.log(args)
+      pushState: (...args) => console.log("Push State:", args)
     };
     window._location = (function() {
       const origin = hostName;
@@ -169,9 +181,11 @@ if (!window.injectedScriptRunOnce) {
         port,
         protocol,
         replace: (...args) => console.log(args),
+        assign: url => window.location.assign(cleanUrl(url)),
         search: "",
         hash: ""
       };      
     })();
+    document._location = window._location;
   })();
 }

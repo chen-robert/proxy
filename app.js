@@ -58,6 +58,8 @@ app.use(express.static(`${__dirname}/src/client`))
 
 app.get("/*", proxy("GET", request));
 app.post("/*", proxy("POST", request));
+app.patch("/*", proxy("PATCH", request));
+app.put("/*", proxy("PUT", request));
 
 // Redirect all other requests to home page
 app.get("*", (req, res) => res.redirect("/"));

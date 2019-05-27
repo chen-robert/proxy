@@ -62,7 +62,7 @@ const processHTML = (req, response, body, originalUrl, secret) => {
   );
 };
 
-const copiedHeaders = ["user-agent", "content-type", "range"];
+const copiedHeaders = ["user-agent", "content-type", "range", "authorization"];
 const proxy = (method, request) => (req, res) => {
   const id = req.cookies.authid;
   const secret = req.cookies._key;
@@ -104,7 +104,6 @@ const proxy = (method, request) => (req, res) => {
   
   log(id, `${method} ${url}`);
 
-  // Copy user-agent, content-type, and range headers
   let headers = {};
   copiedHeaders.forEach(key => {
     const header = req.headers[key];
