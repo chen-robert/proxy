@@ -144,7 +144,7 @@ const proxy = (method, request) => (req, res) => {
     if (response.headers.location) {
       res.setHeader(
         "Location",
-        `${req.protocol}://${req.get("host")}/${response.headers.location}`
+        `${req.protocol}://${req.get("host")}/${crypto.encode(response.headers.location, secret)}`
       );
     }
 
