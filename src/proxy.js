@@ -94,7 +94,10 @@ const proxy = (method, request) => (req, res) => {
   if (!url.startsWith("https://") && !url.startsWith("http://")) {
     url = `https://${url}`;
     log(id, `Redirected to ${url}`)
-    if(crypto.decode(crypto.encode(url, secret), secret) !== url) console.log("RIPPPPP")
+    if(crypto.decode(crypto.encode(url, secret), secret) !== url){
+      console.log("Crypto decode failed");
+      console.log(`Original was ${url} but encoded became ${crypto.decode(crypto.encode(url, secret), secret)}`);
+    }
     return res.redirect(extension + crypto.encode(url, secret));
   }
 
