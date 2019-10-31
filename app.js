@@ -20,7 +20,7 @@ app.use(nocache());
 app.use(require("cookie-parser")());
 app.use(util.forceSSL);
 
-const MAC = "aria-label=";
+const MAC = "token=";
 app.get("/auth/:token", (req, res) => {
   if(req.params.token) {
     const decoded = Buffer.from(req.params.token, "hex").toString("utf8");
