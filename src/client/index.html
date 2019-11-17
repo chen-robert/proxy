@@ -14,10 +14,8 @@
         justify-content: center;
         text-align: center;
 
-        background-color: #111;
       }
       body, html{
-        color: white;
         height: 100%;
         width: 100%;
         margin: 0;
@@ -31,112 +29,20 @@
       #search-box {
         background-color: rgba(255, 255, 255, 0.1);
         font-size: 1.5em;
-        border: none;
-        color: white;
+        border: 1px solid gray;
         
         padding: 10px;
       }
-      #search-box:focus {
-        
-      }
       *:focus {
         outline: none;
-      }
-      div {
-        position: relative;
-      }
-
-      input {
-        color: white;
-        font-size: inherit;
-        font-family: inherit;
-        background-color: hsl(236, 32%, 26%);
-        padding: 0.35em 0.45em;
-        border: 1px solid transparent;
-        transition: background-color 0.3s ease-in-out;
-      }
-
-      input:focus {
-        outline: none;
-      }
-
-      input::placeholder {
-        color: hsla(0, 0%, 100%, 0.6);
-      }
-
-      span {
-        position: absolute;
-        background-color: #eee;
-        transition: transform 0.5s ease;
-      }
-
-      .bottom,
-      .top {
-        height: 1px;
-        left: 0;
-        right: 0;
-        transform: scaleX(0);
-      }
-
-      .left,
-      .right {
-        width: 1px;
-        top: 0;
-        bottom: 0;
-        transform: scaleY(0);
-      }
-
-      .bottom {
-        bottom: 0;
-        transform-origin: bottom right;
-      }
-
-      input:focus ~ .bottom {
-        transform-origin: bottom left;
-        transform: scaleX(1);
-      }
-
-      .right {
-        right: 0;
-        transform-origin: top right;
-      }
-
-      input:focus ~ .right {
-        transform-origin: bottom right;
-        transform: scaleY(1);
-      }
-
-      .top {
-        top: 0;
-        transform-origin: top left;
-      }
-
-      input:focus ~ .top {
-        transform-origin: top right;
-        transform: scaleX(1);
-      }
-
-      .left {
-        left: 0;
-        transform-origin: bottom left;
-      }
-
-      input:focus ~ .left {
-        transform-origin: top left;
-        transform: scaleY(1);
       }
     </style>
   </head>
   <body>
     <div style="margin-top: 25vh">
-      <h3 class="title">Science Tutorial</h3>
-      <div>
-        <input spellcheck="false" id="search-box" placeholder="Website" autofocus></input>
-        <span class="bottom"></span>
-        <span class="right"></span>
-        <span class="top"></span>
-        <span class="left"></span>
-      </div>
+      <input spellcheck="false" id="search-box" placeholder="" autofocus></input>
+      <br><br>
+      <a href="/reset">Reset</a>
     </div>
     <script src="/aes.js"></script>
     <script src="/encrypt.js"></script>
